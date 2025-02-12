@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Profilo Utente</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilo Utente</title>
 </head>
 <body>
     <a href="{{ url_for('logout') }}">Logout</a>
@@ -12,7 +12,7 @@
         <img src="{{ user_info['images'][0]['url'] }}" width="200" alt="Immagine profilo">
     {% endif %}
     <br><br>
-    <a href="/visualizza_brani">Visualizza brani</a>
+
     <h2>Le tue Playlist:</h2>
     {% if playlists %}
     <table>
@@ -21,27 +21,28 @@
             <th>|Nome Playlist|</th>
             <th>|Numero di Brani|</th>
             <th>|Copertina|</th>
+            <th>|Azioni|</th>  <!-- Added Actions column for viewing tracks -->
             </tr>
         </thead>
-    <tbody>
-        {% for playlist in playlists %}
-            <tr>
-            <td>{{ playlist['name'] }}</td>
-            <td>{{ playlist['tracks']['total'] }}</td>
-            <td>
-        {% if playlist['images'] %}
-            <img src="{{ playlist['images'][0]['url'] }}" width="50" alt="Copertina playlist">
-        {% else %}
-            Nessuna immagine
-        {% endif %}
-
-            </td>
-            </tr>
-        {% endfor %}
-    </tbody>
+        <tbody>
+            {% for playlist in playlists %}
+                <tr>
+                <td>{{ playlist['name'] }}</td>
+                <td>{{ playlist['tracks']['total'] }}</td>
+                <td>
+                {% if playlist['images'] %}
+                    <img src="{{ playlist['images'][0]['url'] }}" width="50" alt="Copertina playlist">
+                {% else %}
+                    Nessuna immagine
+                {% endif %}
+                </td>
+                <td><a href="/playlist/{{ playlist['id'] }}">Visualizza brani</a></td> <!-- Link to view tracks -->
+                </tr>
+            {% endfor %}
+        </tbody>
     </table>
-{% else %}
-<p>Non hai playlist disponibili.</p>
-{% endif %}
+    {% else %}
+    <p>Non hai playlist disponibili.</p>
+    {% endif %}
 </body>
 </html>

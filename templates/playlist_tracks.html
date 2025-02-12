@@ -17,6 +17,8 @@
                 <tr>
                     <th scope="col">Nome Brano</th>
                     <th scope="col">Artista</th>
+                    <th scope="col">Album</th> <!-- Added album column -->
+                    <th scope="col">Durata</th> <!-- Added duration column -->
                 </tr>
             </thead>
             <tbody>
@@ -24,10 +26,8 @@
                 <tr>
                     <td>{{ track['track']['name'] }}</td>
                     <td>{{ track['track']['artists'][0]['name'] }}</td>
-                    <td>
-                   
-                    </td>
-                    
+                    <td>{{ track['track']['album']['name'] }}</td> <!-- Display album name -->
+                    <td>{{ track['track']['duration_ms'] // 1000 }} sec</td> <!-- Display track duration in seconds -->
                 </tr>
                 {% endfor %}
             </tbody>
