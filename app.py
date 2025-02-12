@@ -37,6 +37,18 @@ def callback():
     token_info = sp_oauth.get_access_token(code) #uso il code per un codice di accesso
     session['token_info'] = token_info #salvo il token nella mia sessione x riutilizzarlo
     return redirect(url_for('home'))
+@app.route('/playlist/<playlist_id>')
+def playlist_tracks(playlist_id):
+    token_info = session.get('token_info', None)
+
+    sp = spotipy.Spotify(auth=token_info['access_token'])
+
+    # Recupera i brani della playlist
+    results = sp.playlist_tracks(playlist_id)
+    tracks = results['items']
+    
+    return render_template('playlist_tracks.html', tracks=tracks)
+
 @app.route('/home')
 def home():
     token_info = session.get('token_info', None) #recupero token sissione (salvato prima)
