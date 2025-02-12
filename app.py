@@ -14,6 +14,8 @@ sp_oauth = SpotifyOAuth(
 client_id=SPOTIFY_CLIENT_ID,
 client_secret=SPOTIFY_CLIENT_SECRET,
 redirect_uri=SPOTIFY_REDIRECT_URI,
+scope="user-read-private", #permessi x informazioni dell'utente
+show_dialog=True #forziamo la richiesta di inserire new credenziali
 )
 scope="user-read-private" #permessi x informazioni dell'utente
 @app.route('/')
@@ -21,6 +23,10 @@ def login():
     auth_url = sp_oauth.get_authorize_url() #login di spotify
     return redirect(auth_url)
 @app.route('/callback')
+@app.route('/logout')
+def logout():
+    session.clear() #cancelliamo l'access token salvato in session
+    return redirect(url_for('login'))
 def callback():
     code = request.args.get('code') #recupero codice di autorizzazione
     token_info = sp_oauth.get_access_token(code) #uso il code per un codice di accesso
@@ -30,7 +36,7 @@ def callback():
 def home():
     token_info = session.get('token_info', None) #recupero token sissione (salvato prima)
     if not token_info:
-      return redirect(url_for('login'))
+       return redirect(url_for('login'))
     sp = spotipy.Spotify(auth=token_info['access_token']) #usiamo il token per ottenere i dati del profilo
     user_info = sp.current_user()
     print(user_info) #capiamo la struttura di user_info per usarle nel frontend
