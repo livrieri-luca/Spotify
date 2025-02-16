@@ -16,7 +16,7 @@ def home():
 
 @home_bp.route('/playlist/<playlist_id>')
 def playlist_tracks(playlist_id):
-    token_info = session.get('token_info')
+    token_info = session.get('token_info',None)
     if not token_info:
         return redirect(url_for('auth.login'))  
     sp = spotipy.Spotify(auth=token_info['access_token'])
