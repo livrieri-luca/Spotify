@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risultati Ricerca</title>
+</head>
+<body>
+    <h1>Risultati Ricerca Playlist</h1>
+
+    {% if results %}
+        <ul>
+            {% for playlist in results %}
+                {% if playlist %}  {# Controlla se la playlist esiste #}
+                <li>
+                    <strong>{{ playlist.get('name', 'Senza Nome') }}</strong><br>
+
+                    {% if playlist.get('images') %}
+                        <img src="{{ playlist['images'][0]['url'] }}" width="100">
+                    {% endif %}
+
+                    {% if playlist.get('external_urls') and playlist['external_urls'].get('spotify') %}
+                        <p><a href="{{ playlist['external_urls']['spotify'] }}" target="_blank">Ascolta su Spotify</a></p>
+                    {% else %}
+                        <p>Link non disponibile</p>
+                    {% endif %}
+                </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nessuna playlist trovata.</p>
+    {% endif %}
+
+    <p><a href="/">Torna alla Home</a></p>
+</body>
+</html>

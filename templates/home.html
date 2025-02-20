@@ -3,47 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profilo Utente</title>
+    <title>Archivio Musicale - Profilo Utente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <a href="{{ url_for('auth.logout') }}">Logout</a>
-    <h1>Benvenuto, {{ user_info['display_name'] }}!</h1>
-    
-    {% if user_info['images'] %}
-        <img src="{{ user_info['images'][0]['url'] }}" width="200" alt="Immagine profilo">
-    {% endif %}
-    <br><br>
+<body class="container mt-4">
 
-    <h2>Le tue Playlist:</h2>
-    {% if playlists %}
-    <table>
-        <thead>
-            <tr>
-            <th>|Nome Playlist|</th>
-            <th>|Numero di Brani|</th>
-            <th>|Copertina|</th>
-            <th>|Azioni|</th>  
-            </tr>
-        </thead>
-        <tbody>
-            {% for playlist in playlists %}
-                <tr>
-                <td>{{ playlist['name'] }}</td>
-                <td>{{ playlist['tracks']['total'] }}</td>
-                <td>
-                {% if playlist['images'] %}
-                    <img src="{{ playlist['images'][0]['url'] }}" width="50" alt="Copertina playlist">
-                {% else %}
-                    Nessuna immagine
-                {% endif %}
-                </td>
-                <td><a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}">Visualizza brani</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Non hai playlist disponibili.</p>
-    {% endif %}
+    <!-- Barra di navigazione -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home.homepage') }}">🎵 Archivio Etichetta</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-danger text-white" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Barra di ricerca -->
+    <div class="mt-3">
+        <!-- Barra di ricerca nella navbar -->
+<form action="{{ url_for('search.search') }}" method="get" class="d-flex">
+    <input type="text" name="query" class="form-control me-2" placeholder="Cerca playlist pubbliche..." required>
+    <button type="submit" class="btn btn-primary">Cerca</button>
+</form>
+
+    </div>
+
+    <!-- Benvenuto utente -->
+    <div class="mt-4 text-center">
+        <h1>Benvenuto, {{ user_info['display_name'] }}!</h1>
+        {% if user_info['images'] %}
+            <img src="{{ user_info['images'][0]['url'] }}" class="rounded-circle mt-3" width="150" alt="Immagine profilo">
+        {% endif %}
+    </div>
+
+    <!-- Playlist dell'etichetta -->
+    <div class="mt-5">
+        <h2>🎶 Le tue Playlist:</h2>
+
+        {% if playlists %}
+            <table class="table table-hover mt-3">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome Playlist</th>
+                        <th>Numero di Brani</th>
+                        <th>Copertina</th>
+                        <th>Azioni</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for playlist in playlists %}
+                        <tr>
+                            <td>{{ playlist['name'] }}</td>
+                            <td>{{ playlist['tracks']['total'] }}</td>
+                            <td>
+                                {% if playlist['images'] %}
+                                    <img src="{{ playlist['images'][0]['url'] }}" width="50" alt="Copertina playlist">
+                                {% else %}
+                                    Nessuna immagine
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}" class="btn btn-info btn-sm">Visualizza brani</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">Non hai playlist disponibili.</p>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
