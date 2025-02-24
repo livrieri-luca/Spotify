@@ -2,9 +2,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 
 # Configurazione credenziali Spotify
-SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
-SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-hsyduplyeee.ws-eu117.gitpod.io/callback"
+SPOTIFY_CLIENT_ID = "b6c825a1f5364751a178db12c7373bd8"
+SPOTIFY_CLIENT_SECRET = "329a625d0f1e4a9c8a5b43918a91ae0d"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-gab9a45hcsp.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private"
 
 # Autenticazione con OAuth per utenti loggati
