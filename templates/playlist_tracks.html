@@ -35,16 +35,17 @@
                 </tr>
             </thead>
             <tbody>
-                {% for track in tracks %}
-                <tr>
-                    <td>{{ track['track']['name'] }}</td>
-                    <td>{{ track['track']['artists'][0]['name'] }}</td>
-                    <td>{{ track['track']['album']['name'] }}</td>
-                    <td>{{ track['track']['duration_ms'] // 1000 }} sec</td>
-                    <td>
-                        <a href="{{ url_for('home.track_details', track_id=track['track']['id']) }}" class="btn btn-info btn-sm">Vedi Dettagli</a>
-                    </td>
-                </tr>
+                {% for track in tracks %}              
+<tr>
+    <td>{{ track['track']['name'] }}</td>
+    <td>{{ track['track']['artists'][0]['name'] }}</td>
+    <td>{{ track['track']['album']['name'] }}</td>
+    <td>{{ track['track']['duration_ms'] // 1000 }} sec</td>
+    <td>
+        <a href="{{ url_for('home.track_details', track_id=track['track']['id'], playlist_id=playlist_id) }}" class="btn btn-info btn-sm">Vedi Dettagli</a>
+    </td>
+</tr>
+
                 {% endfor %}
             </tbody>
         </table>
