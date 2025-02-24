@@ -20,3 +20,4 @@ def search():
     playlists = results['playlists']['items']
 
     return render_template('search.html', results=playlists)
+
