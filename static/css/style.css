@@ -1,0 +1,291 @@
+/* Impostazioni generali */
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d); /* Gradiente morbido e accattivante */
+    color: #fff;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    box-sizing: border-box;
+    height: 100vh;
+}
+
+/* Contenitore principale */
+.container {
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #2c3e50;
+    padding: 15px 25px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Branding della navbar */
+.navbar .navbar-brand {
+    color: #fff;
+    font-size: 2.5rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+.navbar .navbar-brand:hover {
+    color: #ff6f61;
+}
+
+/* Link nella navbar */
+.navbar .nav-link {
+    color: #fff;
+    font-size: 1.1rem;
+    padding: 10px 20px;
+    transition: color 0.3s ease;
+}
+
+.navbar .nav-link:hover {
+    color: #ff6f61;
+}
+
+/* Pulsante danger */
+.navbar .btn-danger {
+    background-color: #ff6f61;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.navbar .btn-danger:hover {
+    background-color: #e04b58;
+    transform: translateY(-3px);
+}
+
+/* Barra di ricerca */
+.search-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.search-container input {
+    padding: 12px;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    border: none;
+    width: 100%;
+    max-width: 550px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-container button {
+    padding: 12px;
+    margin-left: 10px;
+    background-color: #ff6f61;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.search-container button:hover {
+    background-color: #e04b58;
+}
+
+/* Titolo principale */
+h2 {
+    font-size: 3.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+    text-transform: uppercase;
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+/* Paragrafi */
+p {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    line-height: 1.8;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Immagini */
+img {
+    border-radius: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-width: 100%;
+    object-fit: cover;
+}
+
+img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+/* Pulsanti principali */
+.btn-primary {
+    background-color: #ff6f61;
+    border-radius: 30px;
+    padding: 14px 30px;
+    font-size: 1.2rem;
+    border: none;
+    margin-top: 30px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #e04b58;
+    transform: translateY(-3px);
+}
+
+/* Layout Playlist e Track */
+table {
+    width: 100%;
+    margin-top: 40px;
+    border-radius: 10px;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 18px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+table th {
+    background-color: #2c3e50;
+    color: #fff;
+    font-weight: 600;
+}
+
+table tr:hover {
+    background-color: #f5f5f5;
+}
+
+table td a {
+    background-color: #27ae60;
+    border-radius: 20px;
+    color: #fff;
+    padding: 12px 25px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+table td a:hover {
+    background-color: #1e8449;
+    transform: translateY(-3px);
+}
+
+/* Layout risultati ricerca */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 40px;
+}
+
+ul li {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+ul li:hover {
+    background-color: #f9f9f9;
+    transform: translateY(-3px);
+}
+
+ul li img {
+    max-width: 150px;
+    margin-right: 25px;
+    border-radius: 10px;
+}
+
+ul li strong {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    flex-grow: 1;
+}
+
+/* Dettagli brano */
+.track-details-container {
+    background-color: #fff;
+    border-radius: 25px;
+    padding: 40px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    margin-top: 40px;
+    transition: box-shadow 0.3s ease;
+}
+
+.track-details-container:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.track-details-container h2,
+.track-details-container p {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.track-details-container img {
+    max-width: 250px;
+    margin: 20px 0;
+}
+
+/* Playlist */
+.playlist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px;
+    background-color: #fff;
+    border-radius: 20px;
+    margin-top: 30px;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.playlist-item:hover {
+    background-color: #f8f9f9;
+    transform: translateY(-3px);
+}
+
+.playlist-item img {
+    max-width: 70px;
+    border-radius: 10px;
+    margin-right: 20px;
+}
+
+.playlist-item h4 {
+    font-size: 1.4rem;
+    color: #2c3e50;
+}
+
+.playlist-item a {
+    color: #2980b9;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.playlist-item a:hover {
+    color: #1f618d;
+}
