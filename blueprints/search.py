@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template
 import spotipy
-from services.spotify_oauth import SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+from services.spotify_api import SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 
 search_bp = Blueprint('search', __name__)
 

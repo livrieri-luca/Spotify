@@ -9,7 +9,7 @@ app.secret_key = 'chiave_per_session'
 # Registriamo i Blueprint
 app.register_blueprint(auth_bp)
 app.register_blueprint(home_bp)
-app.register_blueprint(search_bp)  # Registriamo la ricerca
+app.register_blueprint(search_bp) 
 
 if __name__ == '__main__':
     app.run(debug=True)
