@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisi delle Playlist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Contenitore principale -->
+    <div class="container mt-5">
+        
+        <!-- Barra di navigazione -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ url_for('home.homepage') }}">🎵 Archivio Etichetta</a>
+                <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-danger text-white" href="{{ url_for('auth.logout') }}">Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Titolo della pagina -->
+        <h2 class="mt-4 text-center">Analisi delle Playlist</h2>
+
+        <!-- Sezione dei grafici (figura artisti, album, generi) -->
+        <div class="mt-4">
+            <h4>Top Artisti</h4>
+            <div>{{ fig_artists|safe }}</div>  <!-- Grafico interattivo degli artisti -->
+        </div>
+
+        <div class="mt-4">
+            <h4>Top Album</h4>
+            <div>{{ fig_albums|safe }}</div>  <!-- Grafico interattivo degli album -->
+        </div>
+
+        <div class="mt-4">
+            <h4>Distribuzione dei Generi</h4>
+            <div>{{ fig_genres|safe }}</div>  <!-- Grafico interattivo dei generi -->
+        </div>
+
+        <!-- Link per tornare alla home -->
+        <p class="text-center mt-5">
+            <a href="{{ url_for('home.homepage') }}" class="btn btn-primary">Torna alla Home</a>
+        </p>
+
+    </div>
+
+    <!-- Include JS di Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
