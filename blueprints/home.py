@@ -1,7 +1,5 @@
 from flask import Blueprint, redirect, request, url_for, session, render_template
-from services.spotify_api import (
-    get_user_info, get_user_playlists, get_playlist_tracks, get_track_details, get_all_tracks
-)
+from services.spotify_api import get_user_info, get_user_playlists, get_playlist_tracks, get_track_details, get_all_tracks
 import plotly.express as px
 
 home_bp = Blueprint('home', __name__)
