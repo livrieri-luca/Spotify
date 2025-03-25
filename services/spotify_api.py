@@ -2,9 +2,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 import pandas as pd
 
-SPOTIFY_CLIENT_ID = "033d14b0d2cd48068699ee4bad749e9b"
-SPOTIFY_CLIENT_SECRET = "e4ce5171826d4cbe8a7d30c84dec6c5d"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-rp9y5agng9e.ws-eu118.gitpod.io/callback"
+SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
+SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-u2m2t8y2izo.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private"
 
 sp_oauth = SpotifyOAuth(
@@ -38,7 +38,13 @@ def get_track_details(token_info, track_id):
     artist_details = sp.artist(track['artists'][0]['id'])
     genre = artist_details.get('genres', ['Genere sconosciuto'])[0]
     return track, genre
-
+def get_user_info(token_info):
+    # Creazione di un oggetto spotipy con il token
+    sp = spotipy.Spotify(auth=token_info['access_token'])
+    
+    # Recupera le informazioni dell'utente
+    user_info = sp.current_user()
+    return user_info
 def get_all_tracks(token_info):
     sp = get_spotify_object(token_info)
     playlists = get_user_playlists(token_info)
