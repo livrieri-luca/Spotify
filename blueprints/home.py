@@ -1,17 +1,14 @@
-from flask import Blueprint, render_template, session, redirect, url_for
-from flask_login import login_required, current_user
-from services.models import Playlist
+from flask import Blueprint, redirect, request, url_for, session, render_template
+from services.spotify_api import get_user_info, get_user_playlists, get_playlist_tracks, get_track_details, get_all_tracks
+import plotly.express as px
 
 home_bp = Blueprint('home', __name__)
 
 @home_bp.route('/home')
-@login_required
 def homepage():
-    """Pagina principale, mostra informazioni utente e playlist"""
     token_info = session.get('token_info')
     user_info = get_user_info(token_info) if token_info else None
-    playlists = Playlist.get_playlists(current_user.id)
-
+    playlists = get_user_playlists(token_info) if token_info else None
     return render_template('home.html', user_info=user_info, playlists=playlists)
 
 @home_bp.route('/playlist_tracks/<playlist_id>')
