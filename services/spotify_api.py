@@ -5,8 +5,9 @@ import pandas as pd
 
 SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
 SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-vsm5fcx6v9c.ws-eu118.gitpod.io/callback"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-ebplcm07sa8.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private"
+
 
 sp_oauth = SpotifyOAuth(
     client_id=SPOTIFY_CLIENT_ID,
