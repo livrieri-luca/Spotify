@@ -44,12 +44,9 @@ def analytics():
     top_albums = tracks_df['album'].value_counts().head(5)
     fig_albums_html = px.pie(top_albums, names=top_albums.index, values=top_albums.values, 
                              title="Top 5 Album più presenti").to_html(full_html=False)
-    
-    genre_distribution = tracks_df['genre'].value_counts()
-    fig_genres_html = px.pie(genre_distribution, names=genre_distribution.index, values=genre_distribution.values, 
-                             title="Distribuzione dei Generi Musicali").to_html(full_html=False)
+
+
     
     return render_template('analytics.html', 
                            fig_artists=fig_artists_html, 
-                           fig_albums=fig_albums_html, 
-                           fig_genres=fig_genres_html)
+                           fig_albums=fig_albums_html)
