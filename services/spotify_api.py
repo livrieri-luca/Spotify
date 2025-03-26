@@ -5,7 +5,7 @@ import pandas as pd
 
 SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
 SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-0pjdwn7rrxy.ws-eu118.gitpod.io/callback"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-4i3a7vc3jkz.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private"
 
 
@@ -33,12 +33,18 @@ def get_user_playlists(token_info):
 
 def get_playlist_tracks(token_info, playlist_id):
     return get_spotify_object(token_info).playlist_tracks(playlist_id)['items']
-
 def get_track_details(token_info, track_id):
     sp = get_spotify_object(token_info)
     track = sp.track(track_id)
     artist_details = sp.artist(track['artists'][0]['id'])
-    genre = artist_details.get('genres', ['Genere sconosciuto'])[0]
+    
+    # Verifica se la lista dei generi è vuota prima di accedere
+    genres = artist_details.get('genres', [])
+    if genres:
+        genre = genres[0]  # Prendi il primo genere se la lista non è vuota
+    else:
+        genre = 'Genere sconosciuto'  # Fallback se la lista è vuota
+
     return track, genre
 
 def get_all_tracks(token_info):
