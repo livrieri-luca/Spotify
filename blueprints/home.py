@@ -1,10 +1,12 @@
-from flask import Blueprint, redirect, request, url_for, session, render_template
+from flask import Blueprint, render_template, session, redirect, url_for
+from flask_login import login_required
 from services.spotify_api import get_user_info, get_user_playlists, get_playlist_tracks, get_track_details, get_all_tracks
 import plotly.express as px
 
 home_bp = Blueprint('home', __name__)
 
 @home_bp.route('/home')
+@login_required
 def homepage():
     token_info = session.get('token_info')
     user_info = get_user_info(token_info) if token_info else None
@@ -12,6 +14,7 @@ def homepage():
     return render_template('home.html', user_info=user_info, playlists=playlists)
 
 @home_bp.route('/playlist_tracks/<playlist_id>')
+@login_required
 def playlist_tracks(playlist_id):
     token_info = session.get('token_info')
     if not token_info:
@@ -20,6 +23,7 @@ def playlist_tracks(playlist_id):
     return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)
 
 @home_bp.route('/track_details/<track_id>')
+@login_required
 def track_details(track_id):
     token_info = session.get('token_info')
     if not token_info:
@@ -29,6 +33,7 @@ def track_details(track_id):
     return render_template('track_details.html', track=track, genre=genre, playlist_id=playlist_id)
 
 @home_bp.route('/analisi')
+@login_required
 def analytics():
     token_info = session.get('token_info')
     if not token_info:
@@ -45,8 +50,6 @@ def analytics():
     fig_albums_html = px.pie(top_albums, names=top_albums.index, values=top_albums.values, 
                              title="Top 5 Album più presenti").to_html(full_html=False)
 
-
-    
     return render_template('analytics.html', 
                            fig_artists=fig_artists_html, 
                            fig_albums=fig_albums_html)
