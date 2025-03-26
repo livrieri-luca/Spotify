@@ -53,3 +53,9 @@ def analytics():
     return render_template('analytics.html', 
                            fig_artists=fig_artists_html, 
                            fig_albums=fig_albums_html)
+@home_bp.route('/rimuovi/<id>')
+def rimuovi(id):
+    elemento = ListaPlaylist.query.get_or_404(id)
+    db.session.delete(elemento)
+    db.session.commit()
+    return redirect(url_for('home.homepage'))
