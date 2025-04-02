@@ -3,40 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <title>Risultati Ricerca</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-
     <h1>Risultati Ricerca Playlist</h1>
 
-    {% if results %}
-        <ul>
-            {% for playlist in results %}
-                {% if playlist %}  {# Controlla se la playlist esiste #}
-                <li>
-                    <strong>{{ playlist.get('name', 'Senza Nome') }}</strong><br>
-
-                    {% if playlist.get('images') %}
-                        <img src="{{ playlist['images'][0]['url'] }}" width="100">
-                    {% endif %}
-
-                    <!-- Bottone Visualizza Brani -->
-                    <p>
-                        <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}" class="btn btn-primary">
-                            Visualizza Brani
-                        </a>
-                    </p>
-
-                </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+    <h2>Playlist Salvate</h2>
+    {% if playlists %}
+    <ul>
+        {% for playlist in playlists %}
+            <li>
+                <strong>{{ playlist.nome }}</strong><br>
+                <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist.id) }}" class="btn btn-primary">Visualizza Brani</a>
+            </li>
+        {% endfor %}
+    </ul>
     {% else %}
-        <p>Nessuna playlist trovata.</p>
+    <p>Nessuna playlist salvata trovata.</p>
+    {% endif %}
+
+    <h2>Playlist Pubbliche su Spotify</h2>
+    {% if spotify_playlists %}
+    <ul>
+        {% for playlist in spotify_playlists %}
+            <li>
+                <strong>{{ playlist.name }}</strong><br>
+
+                {% if playlist.images %}
+                    <img src="{{ playlist.images[0].url }}" width="100">
+                {% endif %}
+
+                <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist.id) }}" class="btn btn-primary">Visualizza Brani</a>
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Nessuna playlist trovata su Spotify.</p>
     {% endif %}
 
     <p><a href="/">Torna alla Home</a></p>
-
 </body>
 </html>

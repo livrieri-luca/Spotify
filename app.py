@@ -4,7 +4,6 @@ from flask_bcrypt import Bcrypt
 from models import db, User
 from blueprints.auth import auth_bp
 from blueprints.home import home_bp
-from blueprints.search import search_bp
 
 app = Flask(__name__)
 
@@ -27,7 +26,6 @@ def load_user(user_id):
 # Registrazione dei Blueprint
 app.register_blueprint(auth_bp)
 app.register_blueprint(home_bp)
-app.register_blueprint(search_bp)
 
 # Creazione del database (se non esiste)
 with app.app_context():

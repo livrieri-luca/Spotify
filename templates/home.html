@@ -30,7 +30,7 @@
 
     <!-- Barra di ricerca -->
     <div class="mt-3">
-        <form action="{{ url_for('search.search') }}" method="get" class="d-flex">
+        <form action="{{ url_for('home.search') }}" method="get" class="d-flex">
             <input type="text" name="query" class="form-control me-2" placeholder="Cerca playlist pubbliche..." required>
             <button type="submit" class="btn btn-primary">Cerca</button>
         </form>

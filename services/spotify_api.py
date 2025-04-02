@@ -4,9 +4,8 @@ import pandas as pd
 
 SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
 SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-w4yi5w0zeuc.ws-eu118.gitpod.io/callback"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-vpnee4gydsy.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private"
-
 
 sp_oauth = SpotifyOAuth(
     client_id=SPOTIFY_CLIENT_ID,
@@ -31,7 +30,12 @@ def get_user_playlists(token_info):
     return get_spotify_object(token_info).current_user_playlists()['items']
 
 def get_playlist_tracks(token_info, playlist_id):
-    return get_spotify_object(token_info).playlist_tracks(playlist_id)['items']
+    try:
+        response = get_spotify_object(token_info).playlist_tracks(playlist_id)
+        return response.get('items', []) if response else []  # Ritorna un array vuoto se la risposta è vuota o None
+    except Exception as e:
+        print(f"Errore nel recupero dei brani della playlist {playlist_id}: {e}")
+        return []  # Se c'è un errore, ritorna una lista vuota
 
 def get_track_details(token_info, track_id):
     sp = get_spotify_object(token_info)
