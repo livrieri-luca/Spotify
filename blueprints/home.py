@@ -1,10 +1,9 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for,request
 from flask_login import login_required
-from services.spotify_api import get_user_info, get_user_playlists
-import spotipy
-
+from services.spotify_api import get_user_info, get_user_playlists,get_all_tracks,get_spotify_object,get_playlist_tracks,get_track_details
+import plotly.express as px
 home_bp = Blueprint('home', __name__)
-
+from models import ListaPlaylist  
 @home_bp.route('/home')
 @login_required
 def homepage():
@@ -77,11 +76,9 @@ def search():
     query = request.args.get('query')
     
     if query:
-        # Ricerca per nome della playlist nel database
-        playlists = Playlist.query.filter(Playlist.name.like(f'%{query}%')).all()
+        # Ricerca per nome della playlist nel database usando ListaPlaylist
+        playlists = ListaPlaylist.query.filter(ListaPlaylist.nome.like(f'%{query}%')).all()
         return render_template('search_results.html', playlists=playlists)
-    
-    return render_template('search.html')
 @home_bp.route('/salva_playlist', methods=['POST'])
 @login_required
 def save_playlist():
