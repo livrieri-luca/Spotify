@@ -91,6 +91,13 @@
                 <a class="btn btn-primary text-white" href="{{ url_for('auth.login') }}">Login</a>
             </div>
         {% endif %}
+
+        <!-- Spotify login section -->
+        {% if not spotify_logged_in %}
+            <a href="{{ url_for('auth.ciao') }}" class="btn btn-success mt-2">Accedi con Spotify</a>
+        {% else %}
+            <p>Sei connesso con Spotify come {{ user_info['display_name'] }}</p>
+        {% endif %}
     </div>
 
     <!-- Bootstrap JS -->

@@ -1,4 +1,3 @@
-
 import spotipy 
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 import pandas as pd
@@ -33,17 +32,17 @@ def get_user_playlists(token_info):
 
 def get_playlist_tracks(token_info, playlist_id):
     return get_spotify_object(token_info).playlist_tracks(playlist_id)['items']
+
 def get_track_details(token_info, track_id):
     sp = get_spotify_object(token_info)
     track = sp.track(track_id)
     artist_details = sp.artist(track['artists'][0]['id'])
     
-    # Verifica se la lista dei generi è vuota prima di accedere
     genres = artist_details.get('genres', [])
     if genres:
-        genre = genres[0]  # Prendi il primo genere se la lista non è vuota
+        genre = genres[0]
     else:
-        genre = 'Genere sconosciuto'  # Fallback se la lista è vuota
+        genre = 'Genere sconosciuto'
 
     return track, genre
 

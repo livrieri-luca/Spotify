@@ -8,7 +8,7 @@ from services.spotify_api import sp_oauth
 auth_bp = Blueprint('auth', __name__)
 bcrypt = Bcrypt()
 
-@auth_bp.route('/')
+@auth_bp.route('/ciao')
 def login():
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
@@ -50,12 +50,9 @@ def callback():
     session['token_info'] = token_info
     return redirect(url_for('auth.loginlocale'))
 
-@auth_bp.route('/loginlocale', methods=['GET', 'POST'])
+@auth_bp.route('/', methods=['GET', 'POST'])
 def loginlocale():
-    token_info = session.get('token_info', None)
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-    user_info = sp.current_user()
-    
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -65,15 +62,7 @@ def loginlocale():
             login_user(user)
             return redirect(url_for('home.homepage'))
         
-        return render_template('login.html', error="Credenziali non valide.", user_info=user_info)
+        return render_template('login.html', error="Credenziali non valide.")
     
-    return render_template('login.html', error=None, user_info=user_info)
+    return render_template('login.html', error=None)
 
-@auth_bp.route('/annullalogin')
-def annullalogin():
-    try:
-        os.remove(".cache")
-    except:
-        print(".cache non esiste")
-    session.clear()
-    return redirect(url_for('home.homepage'))

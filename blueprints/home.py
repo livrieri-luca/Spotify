@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for
 from flask_login import login_required
-from services.spotify_api import get_user_info, get_user_playlists, get_playlist_tracks, get_track_details, get_all_tracks
-import plotly.express as px
+from services.spotify_api import get_user_info, get_user_playlists
+import spotipy
 
 home_bp = Blueprint('home', __name__)
 
@@ -9,9 +9,20 @@ home_bp = Blueprint('home', __name__)
 @login_required
 def homepage():
     token_info = session.get('token_info')
-    user_info = get_user_info(token_info) if token_info else None
-    playlists = get_user_playlists(token_info) if token_info else None
-    return render_template('home.html', user_info=user_info, playlists=playlists)
+    
+    # Se l'utente ha effettuato il login con Spotify
+    spotify_logged_in = bool(token_info)
+    
+    user_info = None
+    playlists = None
+
+    # Se l'utente è loggato con Spotify, ottieni le informazioni e le playlist
+    if spotify_logged_in:
+        user_info = get_user_info(token_info)
+        playlists = get_user_playlists(token_info)
+
+    return render_template('home.html', user_info=user_info, playlists=playlists, spotify_logged_in=spotify_logged_in)
+
 
 @home_bp.route('/playlist_tracks/<playlist_id>')
 @login_required
@@ -53,9 +64,36 @@ def analytics():
     return render_template('analytics.html', 
                            fig_artists=fig_artists_html, 
                            fig_albums=fig_albums_html)
+
 @home_bp.route('/rimuovi/<id>')
 def rimuovi(id):
     elemento = ListaPlaylist.query.get_or_404(id)
     db.session.delete(elemento)
     db.session.commit()
+    return redirect(url_for('home.homepage'))
+@home_bp.route('/search', methods=['GET'])
+@login_required
+def search():
+    query = request.args.get('query')
+    
+    if query:
+        # Ricerca per nome della playlist nel database
+        playlists = Playlist.query.filter(Playlist.name.like(f'%{query}%')).all()
+        return render_template('search_results.html', playlists=playlists)
+    
+    return render_template('search.html')
+@home_bp.route('/salva_playlist', methods=['POST'])
+@login_required
+def save_playlist():
+    playlist_id = request.form['playlist_id']
+    # Trova la playlist o crea una nuova voce nel DB
+    playlist = Playlist.query.get_or_404(playlist_id)
+    user_id = current_user.id
+
+    # Salva la playlist nel database (per un account locale)
+    if not playlist_is_saved(user_id, playlist_id):
+        new_saved_playlist = SavedPlaylist(user_id=user_id, playlist_id=playlist.id)
+        db.session.add(new_saved_playlist)
+        db.session.commit()
+
     return redirect(url_for('home.homepage'))
