@@ -1,18 +1,8 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analisi delle Playlist</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <!-- Contenitore principale -->
+{% block content %}
     <div class="container mt-5">
-        
-        <!-- Barra di navigazione -->
+        <!-- Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="{{ url_for('home.homepage') }}">🎵 Archivio Etichetta</a>
@@ -26,30 +16,87 @@
             </div>
         </nav>
 
-        <!-- Titolo della pagina -->
+        <!-- Page Title -->
         <h2 class="mt-4 text-center">Analisi delle Playlist</h2>
 
-        <!-- Sezione dei grafici (figura artisti, album, generi) -->
+        <!-- Graphs Section -->
         <div class="mt-4">
             <h4>Top Artisti</h4>
-            <div>{{ fig_artists|safe }}</div>  <!-- Grafico interattivo degli artisti -->
+            <div>{{ fig_artists|safe }}</div>
         </div>
 
         <div class="mt-4">
             <h4>Top Album</h4>
-            <div>{{ fig_albums|safe }}</div>  <!-- Grafico interattivo degli album -->
+            <div>{{ fig_albums|safe }}</div>
         </div>
 
+        <!-- Other Distribution Graphs -->
+        <div class="mt-4">
+            <h4>Distribuzione Temporale</h4>
+            <div>{{ fig_years|safe }}</div>
+        </div>
 
-        <!-- Link per tornare alla home -->
+        <div class="mt-4">
+            <h4>Distribuzione della Durata</h4>
+            <div>{{ fig_dur|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Distribuzione della Popolarità</h4>
+            <div>{{ fig_pop|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Distribuzione dei Generi Musicali</h4>
+            <div>{{ fig_genres|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Evoluzione della Popolarità nel Tempo</h4>
+            <div>{{ fig_pop_time|safe }}</div>
+        </div>
+
+        <!-- Playlist Comparison Section -->
+        <div class="mt-4">
+            <h4>Confronto delle Playlist</h4>
+            <p><strong>Numero di brani in comune:</strong> {{ shared_tracks_count }} brani</p>
+            <p><strong>Percentuale di somiglianza:</strong> {{ similarity_percentage }}%</p>
+
+            <h5>Grafico di Confronto dei Brani in Comune</h5>
+            <div>{{ fig_shared_tracks|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Confronto degli Artisti in Comune</h4>
+            <p><strong>Artisti in comune:</strong> {{ shared_artists_count }} artisti</p>
+            <h5>Grafico di Confronto degli Artisti in Comune</h5>
+            <div>{{ fig_shared_artists|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Confronto della Popolarità Media delle Playlist</h4>
+            <p><strong>Popolarità Media Playlist 1:</strong> {{ avg_pop_playlist_1 }}</p>
+            <p><strong>Popolarità Media Playlist 2:</strong> {{ avg_pop_playlist_2 }}</p>
+
+            <h5>Grafico di Confronto della Popolarità Media</h5>
+            <div>{{ fig_pop_comparison|safe }}</div>
+        </div>
+
+        <div class="mt-4">
+            <h4>Confronto dei Generi Musicali tra Playlist</h4>
+            <h5>Generi comuni:</h5>
+            <ul>
+                {% for genre in common_genres %}
+                    <li>{{ genre }}</li>
+                {% endfor %}
+            </ul>
+            <h5>Grafico di Confronto dei Generi Musicali</h5>
+            <div>{{ fig_genre_comparison|safe }}</div>
+        </div>
+
+        <!-- Back to Home Button -->
         <p class="text-center mt-5">
             <a href="{{ url_for('home.homepage') }}" class="btn btn-primary">Torna alla Home</a>
         </p>
-
     </div>
-
-    <!-- Include JS di Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
+{% endblock %}

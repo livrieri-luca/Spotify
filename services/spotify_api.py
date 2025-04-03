@@ -50,22 +50,55 @@ def get_track_details(token_info, track_id):
 
     return track, genre
 
-def get_all_tracks(token_info):
+def get_all_tracks(token_info, playlist_id=None):
     sp = get_spotify_object(token_info)
-    playlists = get_user_playlists(token_info)
-    tracks_data = []
     
-    for playlist in playlists:
-        playlist_id = playlist['id']
+    if playlist_id:  # Se viene passato un playlist_id, recupera solo le tracce di quella playlist
         tracks = get_playlist_tracks(token_info, playlist_id)
+    else:
+        # Se non c'è un playlist_id, recupera tutte le playlist dell'utente
+        playlists = get_user_playlists(token_info)
+        tracks_data = []
         
-        for track in tracks:
-            track_info = track['track']
-            tracks_data.append({
-                'track_name': track_info['name'],
-                'artist': track_info['artists'][0]['name'],
-                'album': track_info['album']['name'],
-                'genre': track_info['album'].get('genres', ['Sconosciuto'])[0]
-            })
+        for playlist in playlists:
+            playlist_id = playlist['id']
+            tracks = get_playlist_tracks(token_info, playlist_id)
+            
+            # Aggiungi le tracce alla lista
+            for track in tracks:
+                track_info = track['track']
+                release_date = track_info['album'].get('release_date', 'Unknown')
+                popularity = track_info['popularity']
+                duration_ms = track_info['duration_ms']
+                
+                tracks_data.append({
+                    'track_name': track_info['name'],
+                    'artist': track_info['artists'][0]['name'],
+                    'album': track_info['album']['name'],
+                    'genre': track_info['album'].get('genres', ['Sconosciuto'])[0],
+                    'release_date': release_date,
+                    'duration_ms': duration_ms,
+                    'popularity': popularity
+                })
+                
+        return pd.DataFrame(tracks_data)
+
+    # Se playlist_id è passato, restituisci i dettagli delle tracce per quella playlist
+    tracks_data = []
+    for track in tracks:
+        track_info = track['track']
+        release_date = track_info['album'].get('release_date', 'Unknown')
+        popularity = track_info['popularity']
+        duration_ms = track_info['duration_ms']
+        
+        tracks_data.append({
+            'track_name': track_info['name'],
+            'artist': track_info['artists'][0]['name'],
+            'album': track_info['album']['name'],
+            'genre': track_info['album'].get('genres', ['Sconosciuto'])[0],
+            'release_date': release_date,
+            'duration_ms': duration_ms,
+            'popularity': popularity
+        })
     
     return pd.DataFrame(tracks_data)
