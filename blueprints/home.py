@@ -155,6 +155,7 @@ def analytics():
             title='Artisti in comune'
         ).to_html(full_html=False)
 
+        # Passa tutte le informazioni al template
         return render_template('analytics.html',
                                fig_artists=fig_artists_html,
                                fig_albums=fig_albums_html,
@@ -167,9 +168,9 @@ def analytics():
                                fig_artists_comparison=fig_artists_comparison,
                                fig_genres_comparison=fig_genres_comparison,
                                fig_pop_comparison=fig_pop_comparison,
-                               common_tracks=common_tracks,
-                               common_artists=common_artists,
-                               common_genres=common_genres,
+                               common_tracks=len(common_tracks),
+                               common_artists=len(common_artists),
+                               common_genres=len(common_genres),
                                similarity_percentage=similarity_percentage,
                                avg_pop_1=avg_pop_1,
                                avg_pop_2=avg_pop_2)
@@ -180,7 +181,8 @@ def analytics():
                            fig_dur=fig_dur_html,
                            fig_pop=fig_pop_html,
                            fig_genres=fig_genres_html,
-                           fig_pop_time=fig_pop_time_html)
+                           fig_pop_time=fig_pop_time_html) 
+
 
 
 

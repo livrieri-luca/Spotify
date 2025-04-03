@@ -3,3 +3,4 @@ flask
 pandas
 numpy
 plotly
+flask_login

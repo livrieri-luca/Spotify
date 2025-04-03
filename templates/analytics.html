@@ -59,24 +59,24 @@
         <!-- Playlist Comparison Section -->
         <div class="mt-4">
             <h4>Confronto delle Playlist</h4>
-            <p><strong>Numero di brani in comune:</strong> {{ shared_tracks_count }} brani</p>
+            <p><strong>Numero di brani in comune:</strong> {{ common_tracks }} brani</p>
             <p><strong>Percentuale di somiglianza:</strong> {{ similarity_percentage }}%</p>
 
             <h5>Grafico di Confronto dei Brani in Comune</h5>
-            <div>{{ fig_shared_tracks|safe }}</div>
+            <div>{{ fig_comparison|safe }}</div>
         </div>
 
         <div class="mt-4">
             <h4>Confronto degli Artisti in Comune</h4>
-            <p><strong>Artisti in comune:</strong> {{ shared_artists_count }} artisti</p>
+            <p><strong>Artisti in comune:</strong> {{ common_artists }} artisti</p>
             <h5>Grafico di Confronto degli Artisti in Comune</h5>
-            <div>{{ fig_shared_artists|safe }}</div>
+            <div>{{ fig_artists_comparison|safe }}</div>
         </div>
 
         <div class="mt-4">
             <h4>Confronto della Popolarità Media delle Playlist</h4>
-            <p><strong>Popolarità Media Playlist 1:</strong> {{ avg_pop_playlist_1 }}</p>
-            <p><strong>Popolarità Media Playlist 2:</strong> {{ avg_pop_playlist_2 }}</p>
+            <p><strong>Popolarità Media Playlist 1:</strong> {{ avg_pop_1 }}</p>
+            <p><strong>Popolarità Media Playlist 2:</strong> {{ avg_pop_2 }}</p>
 
             <h5>Grafico di Confronto della Popolarità Media</h5>
             <div>{{ fig_pop_comparison|safe }}</div>
@@ -91,7 +91,7 @@
                 {% endfor %}
             </ul>
             <h5>Grafico di Confronto dei Generi Musicali</h5>
-            <div>{{ fig_genre_comparison|safe }}</div>
+            <div>{{ fig_genres_comparison|safe }}</div>
         </div>
 
         <!-- Back to Home Button -->
