@@ -18,7 +18,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('home.analytics') }}">Analisi delle Playlist</a>
                 </li>
-                <!-- Se l'utente è loggato, mostra il link per il logout -->
+                <!-- Link "Confronta Playlist" -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home.select_playlists_for_comparison') }}">
+                        <button class="btn btn-warning">Confronta Playlist</button>
+                    </a>
+                </li>
                 {% if user_info %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
@@ -28,26 +33,9 @@
         </div>
     </nav>
 
-    <!-- Barra di ricerca -->
-    <div class="mt-3">
-        <form action="{{ url_for('home.search') }}" method="get" class="d-flex">
-            <input type="text" name="query" class="form-control me-2" placeholder="Cerca playlist pubbliche..." required>
-            <button type="submit" class="btn btn-primary">Cerca</button>
-        </form>
-    </div>
-
-    <!-- Benvenuto utente -->
-    <div class="mt-4 text-center">
-        <h1>Benvenuto {{ user_info['display_name'] }}!</h1>
-        {% if user_info['images'] %}
-            <img src="{{ user_info['images'][0]['url'] }}" class="rounded-circle mt-3" width="150" alt="Immagine profilo">
-        {% endif %}
-    </div>
-
-    <!-- Playlist dell'etichetta -->
+    <!-- Contenuto della pagina -->
     <div class="mt-5">
         <h2>🎶 Le tue Playlist:</h2>
-
         {% if playlists %}
             <table class="table table-hover mt-3">
                 <thead class="table-dark">
@@ -72,36 +60,13 @@
                             </td>
                             <td>
                                 <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}" class="btn btn-info btn-sm">Visualizza brani</a>
-                                <!-- Bottone Confronta Playlist -->
-                                {% if loop.index <= (playlists|length - 1) %}
-                                    <a href="{{ url_for('home.confronto_playlist', playlist_id_1=playlists[loop.index0].id, playlist_id_2=playlists[loop.index0 + 1].id) }}" class="btn btn-warning btn-sm ms-2">Confronta</a>
-                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-
-            <!-- Logout -->
-            <div class="mt-3 text-center">
-                <a class="btn btn-danger text-white" href="{{ url_for('auth.logout') }}">Logout</a>
-            </div>
-
         {% else %}
             <p class="text-muted mt-3">Non hai playlist disponibili.</p>
-
-            <!-- Login -->
-            <div class="mt-3 text-center">
-                <a class="btn btn-primary text-white" href="{{ url_for('auth.loginlocale') }}">Login</a>
-            </div>
-        {% endif %}
-
-        <!-- Spotify login section -->
-        {% if not spotify_logged_in %}
-        <a href="{{ url_for('auth.login_spotify') }}" class="btn btn-success mt-2">Accedi con Spotify</a>
-
-        {% else %}
-            <p>Sei connesso con Spotify come {{ user_info['display_name'] }}</p>
         {% endif %}
     </div>
 

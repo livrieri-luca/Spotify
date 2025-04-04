@@ -129,13 +129,33 @@ def analytics():
                            fig_pop_time=fig_pop_time_html)
  
 
+@home_bp.route('/seleziona_playlist_confronto', methods=['GET', 'POST'])
+@login_required
+def select_playlists_for_comparison():
+    token_info = session.get('token_info')
+    if not token_info:
+        return redirect(url_for('auth.login'))  # Se non autenticato, reindirizza al login
+
+    # Ottieni le playlist dell'utente da Spotify
+    playlists = get_user_playlists(token_info)
+
+    if request.method == 'POST':
+        # Prendi gli ID delle playlist selezionate
+        playlist_id_1 = request.form.get('playlist_id_1')
+        playlist_id_2 = request.form.get('playlist_id_2')
+
+        # Redirect alla pagina di confronto passando gli ID delle playlist
+        return redirect(url_for('home.confronto_playlist', playlist_id_1=playlist_id_1, playlist_id_2=playlist_id_2))
+
+    return render_template('select_playlists_for_comparison.html', playlists=playlists)
+
 
 @home_bp.route('/confronto_playlist/<playlist_id_1>/<playlist_id_2>', methods=['GET'])
 @login_required
 def confronto_playlist(playlist_id_1, playlist_id_2):
     token_info = session.get('token_info')
     if not token_info:
-        return redirect(url_for('auth.login'))  # Ritorna al login se non autenticato
+        return redirect(url_for('auth.login'))  # Se non autenticato, reindirizza al login
 
     # Ottieni i brani delle due playlist
     playlist_1_tracks = get_playlist_tracks(token_info, playlist_id_1)
@@ -189,7 +209,7 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         title="Artisti in Comune - Frequenza nelle Playlist"
     ).to_html(full_html=False)
 
-    # --- 3. Confronto della popolarità media ---
+    # --- 3. Confronto della Popolarità Media ---
     popularity_1 = [track['track']['popularity'] for track in playlist_1_tracks]
     popularity_2 = [track['track']['popularity'] for track in playlist_2_tracks]
     avg_popularity_1 = sum(popularity_1) / len(popularity_1)
@@ -207,56 +227,22 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
     genres_1 = [track['track']['artists'][0].get('genres', []) for track in playlist_1_tracks]
     genres_2 = [track['track']['artists'][0].get('genres', []) for track in playlist_2_tracks]
 
-    # Calcola la frequenza dei generi
     genre_count_1 = Counter([genre for sublist in genres_1 for genre in sublist])
     genre_count_2 = Counter([genre for sublist in genres_2 for genre in sublist])
 
-    # Prepara i dati per il grafico
     all_genres = set(genre_count_1.keys()).union(genre_count_2.keys())
     genre_frequencies_1 = [genre_count_1.get(genre, 0) for genre in all_genres]
     genre_frequencies_2 = [genre_count_2.get(genre, 0) for genre in all_genres]
 
-    # Grafico per Generi Musicali
     fig_genres = px.bar(
         x=list(all_genres),
-        y=genre_frequencies_1,
-        labels={'x': 'Genere', 'y': 'Frequenza Playlist 1'},
-        title="Generi Musicali - Playlist 1"
+        y=[genre_frequencies_1, genre_frequencies_2],
+        labels={'x': 'Genere', 'y': 'Frequenza'},
+        title="Confronto Generi Musicali"
     ).to_html(full_html=False)
 
-    # --- 5. Distribuzione Temporale ---
-    release_dates_1 = [track['track']['release_date'] for track in playlist_1_tracks]
-    release_dates_2 = [track['track']['release_date'] for track in playlist_2_tracks]
+    return render_template('comparison_results.html', fig_tracks=fig_tracks, fig_artists=fig_artists, fig_popularity=fig_popularity, fig_genres=fig_genres)
 
-    # Estrai l'anno di rilascio e conta le occorrenze
-    years_1 = [pd.to_datetime(date).year for date in release_dates_1 if date]
-    years_2 = [pd.to_datetime(date).year for date in release_dates_2 if date]
-
-    year_counts_1 = pd.Series(years_1).value_counts().sort_index()
-    year_counts_2 = pd.Series(years_2).value_counts().sort_index()
-
-    # Grafico per Distribuzione Temporale
-    fig_years = px.bar(
-        x=year_counts_1.index,
-        y=year_counts_1.values,
-        labels={'x': 'Anno', 'y': 'Numero di Brani'},
-        title="Distribuzione Temporale dei Brani Playlist 1"
-    ).to_html(full_html=False)
-
-    fig_years_2 = px.bar(
-        x=year_counts_2.index,
-        y=year_counts_2.values,
-        labels={'x': 'Anno', 'y': 'Numero di Brani'},
-        title="Distribuzione Temporale dei Brani Playlist 2"
-    ).to_html(full_html=False)
-
-    return render_template('playlist_comparison.html', 
-                           fig_tracks=fig_tracks,
-                           fig_artists=fig_artists,
-                           fig_popularity=fig_popularity,
-                           fig_genres=fig_genres,
-                           fig_years=fig_years,
-                           fig_years_2=fig_years_2)
 @home_bp.route('/rimuovi/<id>')
 def rimuovi(id):
     elemento = ListaPlaylist.query.get_or_404(id)
