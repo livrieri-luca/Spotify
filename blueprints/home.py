@@ -234,14 +234,29 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
     genre_frequencies_1 = [genre_count_1.get(genre, 0) for genre in all_genres]
     genre_frequencies_2 = [genre_count_2.get(genre, 0) for genre in all_genres]
 
+    # Creazione del DataFrame per i generi
+    genre_data = pd.DataFrame({
+        'Genre': list(all_genres),
+        'Playlist 1': genre_frequencies_1,
+        'Playlist 2': genre_frequencies_2
+    })
+
+    # Melting del DataFrame per trasformarlo in una forma lunga
+    genre_data_melted = genre_data.melt(id_vars="Genre", value_vars=["Playlist 1", "Playlist 2"],
+                                         var_name="Playlist", value_name="Frequency")
+
+    # Creazione del grafico a barre
     fig_genres = px.bar(
-        x=list(all_genres),
-        y=[genre_frequencies_1, genre_frequencies_2],
-        labels={'x': 'Genere', 'y': 'Frequenza'},
+        genre_data_melted,
+        x="Genre",
+        y="Frequency",
+        color="Playlist",
+        labels={'Genre': 'Genere', 'Frequency': 'Frequenza'},
         title="Confronto Generi Musicali"
     ).to_html(full_html=False)
 
     return render_template('comparison_results.html', fig_tracks=fig_tracks, fig_artists=fig_artists, fig_popularity=fig_popularity, fig_genres=fig_genres)
+
 
 @home_bp.route('/rimuovi/<id>')
 def rimuovi(id):
