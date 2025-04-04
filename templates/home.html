@@ -72,6 +72,10 @@
                             </td>
                             <td>
                                 <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}" class="btn btn-info btn-sm">Visualizza brani</a>
+                                <!-- Bottone Confronta Playlist -->
+                                {% if loop.index <= (playlists|length - 1) %}
+                                    <a href="{{ url_for('home.confronto_playlist', playlist_id_1=playlists[loop.index0].id, playlist_id_2=playlists[loop.index0 + 1].id) }}" class="btn btn-warning btn-sm ms-2">Confronta</a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
@@ -89,7 +93,6 @@
             <!-- Login -->
             <div class="mt-3 text-center">
                 <a class="btn btn-primary text-white" href="{{ url_for('auth.loginlocale') }}">Login</a>
-
             </div>
         {% endif %}
 
