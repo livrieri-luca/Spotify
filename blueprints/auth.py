@@ -56,7 +56,10 @@ def callback():
 
 @auth_bp.route('/', methods=['GET', 'POST'])
 def loginlocale():
+    # Non eseguire automaticamente il login se non è presente il token Spotify
     token_info = session.get('token_info', None)
+    
+    # Solo se l'utente è già autenticato tramite Spotify
     if token_info:
         sp = spotipy.Spotify(auth=token_info['access_token'])
         user_info = sp.current_user()
@@ -68,17 +71,24 @@ def loginlocale():
             db.session.commit()
 
         login_user(user)
+        flash("Login avvenuto con successo tramite Spotify!", "success")
         return redirect(url_for('home.homepage'))
 
+    # Se la richiesta è un POST (quindi l'utente ha premuto "Accedi")
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        
+        # Trova l'utente nel database
         user = User.query.filter_by(username=username).first()
 
+        # Verifica le credenziali
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
+            flash("Login avvenuto con successo!", "success")
             return redirect(url_for('home.homepage'))
-
-        return render_template('login.html', error="Credenziali non valide.")
-
-    return render_template('login.html', error=None)
+        
+        # Se il login fallisce, flash del messaggio di errore
+        flash("Credenziali non valide.", "error")
+    
+    return render_template('login.html')

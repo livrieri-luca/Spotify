@@ -10,7 +10,7 @@ app = Flask(__name__)
 # Configurazione dell'app
 app.secret_key = 'chiave_per_session'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disabilita il monitoraggio delle modifiche, per evitare warning
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disabilita il monitoraggio delle modifiche
 
 # Inizializzazione delle estensioni
 db.init_app(app)

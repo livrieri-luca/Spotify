@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for, request,flash
 from flask_login import login_required, current_user
 import spotipy
 import pandas as pd
@@ -22,7 +22,6 @@ def homepage():
     user_info = get_user_info(token_info) if spotify_logged_in else None
     playlists = get_user_playlists(token_info) if spotify_logged_in else None
     saved_playlists = SavedPlaylist.query.filter_by(user_id=current_user.id).all()  # Playlist salvate dall'utente
-    
     return render_template('home.html', user_info=user_info, playlists=playlists, saved_playlists=saved_playlists, spotify_logged_in=spotify_logged_in)
 
 
@@ -276,23 +275,28 @@ def search():
 
     return render_template('search.html', playlists=None, spotify_playlists=None)
 
-
 @home_bp.route('/salva_playlist', methods=['POST'])
 @login_required
 def save_playlist():
     playlist_id = request.form['playlist_id']
-    print(f"Received playlist_id: {playlist_id}")  # Debugging line
+    
     # Verifica se la playlist è già stata salvata
     existing_playlist = SavedPlaylist.query.filter_by(user_id=current_user.id, playlist_id=playlist_id).first()
 
     if not existing_playlist:
         # Se la playlist non è già stata salvata, salvala nel database
-        new_saved_playlist = SavedPlaylist(user_id=current_user.id, playlist_id=playlist_id)
+        playlist_info = sp.playlist(playlist_id)  # Ottieni i dettagli della playlist
+        playlist_name = playlist_info['name']  # Nome della playlist
+        
+        new_saved_playlist = SavedPlaylist(user_id=current_user.id, playlist_id=playlist_id, nome=playlist_name)
         db.session.add(new_saved_playlist)
         db.session.commit()
-        message = "Playlist salvata con successo!"
+        flash("Playlist salvata con successo!", "success")
     else:
-        message = "Questa playlist è già stata salvata."
+        flash("Questa playlist è già stata salvata.", "info")
 
-    # Ritorna alla ricerca con un messaggio
-    return redirect(url_for('home.search', message=message))
+    # Recupera tutte le playlist salvate per l'utente
+    saved_playlists = SavedPlaylist.query.filter_by(user_id=current_user.id).all()
+    
+    # Ritorna alla ricerca con i messaggi e le playlist salvate
+    return redirect(url_for('home.search', message="Playlist salvata con successo!", saved_playlists=saved_playlists))
