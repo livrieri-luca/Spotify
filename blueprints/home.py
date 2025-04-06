@@ -135,9 +135,11 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
     if not token_info:
         return redirect(url_for('auth.login'))
 
+    # Ottieni le tracce per entrambe le playlist
     playlist_1_tracks = get_playlist_tracks(token_info, playlist_id_1)
     playlist_2_tracks = get_playlist_tracks(token_info, playlist_id_2)
 
+    # Estrazione dei brani dalle playlist
     tracks_1 = {track['track']['name'] for track in playlist_1_tracks}
     tracks_2 = {track['track']['name'] for track in playlist_2_tracks}
     common_tracks = tracks_1.intersection(tracks_2)
@@ -149,6 +151,8 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         "Brani Comuni": len(common_tracks),
         "Somiglianza (%)": similarity_percentage
     }
+
+    # Creazione del grafico per i brani
     fig_tracks = px.bar(
         x=list(tracks_count.keys()),
         y=list(tracks_count.values()),
@@ -156,10 +160,12 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         title="Confronto Brani nelle Playlist"
     ).to_html(full_html=False)
 
+    # Estrazione degli artisti comuni nelle playlist
     artists_1 = {track['track']['artists'][0]['name'] for track in playlist_1_tracks}
     artists_2 = {track['track']['artists'][0]['name'] for track in playlist_2_tracks}
     common_artists = artists_1.intersection(artists_2)
 
+    # Conteggio della frequenza degli artisti nelle playlist
     artist_count_1 = {artist: sum(1 for track in playlist_1_tracks if artist in [a['name'] for a in track['track']['artists']]) for artist in common_artists}
     artist_count_2 = {artist: sum(1 for track in playlist_2_tracks if artist in [a['name'] for a in track['track']['artists']]) for artist in common_artists}
 
@@ -172,6 +178,7 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
     artist_data_melted = artist_data.melt(id_vars="Artist", value_vars=["Playlist 1", "Playlist 2"],
                                           var_name="Playlist", value_name="Frequenza")
 
+    # Creazione del grafico per gli artisti
     fig_artists = px.bar(
         artist_data_melted,
         x="Artist",
@@ -181,11 +188,13 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         title="Artisti in Comune - Frequenza nelle Playlist"
     ).to_html(full_html=False)
 
+    # Estrazione della popolarità per entrambe le playlist
     popularity_1 = [track['track']['popularity'] for track in playlist_1_tracks]
     popularity_2 = [track['track']['popularity'] for track in playlist_2_tracks]
     avg_popularity_1 = sum(popularity_1) / len(popularity_1)
     avg_popularity_2 = sum(popularity_2) / len(popularity_2)
 
+    # Creazione del grafico per la popolarità
     fig_popularity = px.bar(
         x=['Playlist 1', 'Playlist 2'],
         y=[avg_popularity_1, avg_popularity_2],
@@ -193,25 +202,42 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         title="Confronto Popolarità Media delle Playlist"
     ).to_html(full_html=False)
 
-    genres_1 = [track['track']['artists'][0].get('genres', []) for track in playlist_1_tracks]
-    genres_2 = [track['track']['artists'][0].get('genres', []) for track in playlist_2_tracks]
+    # Estrazione dei generi musicali
+    genres_1 = [track['track']['artists'][0].get('genres', ['Sconosciuto']) for track in playlist_1_tracks]
+    genres_2 = [track['track']['artists'][0].get('genres', ['Sconosciuto']) for track in playlist_2_tracks]
 
+    # Verifica dei generi estratti
+    print("Generi Playlist 1:", genres_1)
+    print("Generi Playlist 2:", genres_2)
+
+    # Creazione dei contatori per i generi
     genre_count_1 = Counter([genre for sublist in genres_1 for genre in sublist])
     genre_count_2 = Counter([genre for sublist in genres_2 for genre in sublist])
 
+    # Verifica dei contatori
+    print("Contatori dei generi Playlist 1:", genre_count_1)
+    print("Contatori dei generi Playlist 2:", genre_count_2)
+
+    # Creazione dei dati per il grafico dei generi
     all_genres = set(genre_count_1.keys()).union(genre_count_2.keys())
     genre_frequencies_1 = [genre_count_1.get(genre, 0) for genre in all_genres]
     genre_frequencies_2 = [genre_count_2.get(genre, 0) for genre in all_genres]
 
+    # Creazione del dataframe per i generi
     genre_data = pd.DataFrame({
         'Genre': list(all_genres),
         'Playlist 1': genre_frequencies_1,
         'Playlist 2': genre_frequencies_2
     })
 
+    # Verifica del dataframe
+    print("Dati dei generi:", genre_data)
+
+    # Melting dei dati per il grafico
     genre_data_melted = genre_data.melt(id_vars="Genre", value_vars=["Playlist 1", "Playlist 2"],
                                          var_name="Playlist", value_name="Frequency")
 
+    # Creazione del grafico per i generi
     fig_genres = px.bar(
         genre_data_melted,
         x="Genre",
@@ -221,7 +247,12 @@ def confronto_playlist(playlist_id_1, playlist_id_2):
         title="Confronto Generi Musicali"
     ).to_html(full_html=False)
 
-    return render_template('comparison_results.html', fig_tracks=fig_tracks, fig_artists=fig_artists, fig_popularity=fig_popularity, fig_genres=fig_genres)
+    # Renderizzazione dei risultati nella pagina
+    return render_template('comparison_results.html', 
+                           fig_tracks=fig_tracks, 
+                           fig_artists=fig_artists, 
+                           fig_popularity=fig_popularity, 
+                           fig_genres=fig_genres)
 
 
 @home_bp.route('/rimuovi/<id>')

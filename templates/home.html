@@ -59,6 +59,7 @@
         <thead class="table-dark">
             <tr>
                 <th>Nome Playlist</th>
+                <th>Immagine</th>  <!-- Aggiunto il campo per l'immagine -->
                 <th>Numero di brani</th>
                 <th>Azioni</th>
             </tr>
@@ -67,13 +68,19 @@
         {% for playlist in playlists %}
         <tr>
             <td>{{ playlist.name }}</td>
+            <!-- Aggiunto l'immagine della playlist -->
+            <td>
+                {% if playlist.images %}
+                    <img src="{{ playlist.images[0]['url'] }}" alt="Immagine Playlist" width="50" height="50" class="rounded">
+                {% else %}
+                    <span>No Image</span>  <!-- Se non ci sono immagini -->
+                {% endif %}
+            </td>
             <td>{{ playlist.track_count }}</td>
             <td>
                 <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist['id']) }}" class="btn btn-info btn-sm">Visualizza brani</a>
-                <!-- Bottone Confronta Playlist -->
-                {% if loop.index < (playlists|length - 1) %}
-                    <a href="{{ url_for('home.confronto_playlist', playlist_id_1=playlists[loop.index0].id, playlist_id_2=playlists[loop.index0 + 1].id) }}" class="btn btn-warning btn-sm ms-2">Confronta</a>
-                {% endif %}
+        
+        
             </td>
         </tr>
         {% endfor %}
