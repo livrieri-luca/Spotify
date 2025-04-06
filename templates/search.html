@@ -9,6 +9,10 @@
 <body>
     <h1>Risultati Ricerca Playlist</h1>
 
+    {% if message %}
+        <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+
     <h2>Playlist Salvate</h2>
     {% if playlists %}
     <ul>
@@ -27,15 +31,21 @@
     {% if spotify_playlists %}
     <ul>
         {% for playlist in spotify_playlists %}
-            <li>
-                <strong>{{ playlist.name }}</strong><br>
+        <li>
+            <strong>{{ playlist.name }}</strong><br>
 
-                {% if playlist.images %}
-                    <img src="{{ playlist.images[0].url }}" width="100">
-                {% endif %}
+            {% if playlist.images %}
+                <img src="{{ playlist.images[0].url }}" width="100">
+            {% endif %}
 
-                <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist.id) }}" class="btn btn-primary">Visualizza Brani</a>
-            </li>
+            <a href="{{ url_for('home.playlist_tracks', playlist_id=playlist.id) }}" class="btn btn-primary">Visualizza Brani</a>
+
+            <!-- Form per salvare la playlist -->
+            <form action="{{ url_for('home.save_playlist') }}" method="POST" style="margin-top: 10px;">
+                <input type="hidden" name="playlist_id" value="{{ playlist.id }}">
+                <button type="submit" class="btn btn-secondary">Salva nel sito</button>
+            </form>
+        </li>
         {% endfor %}
     </ul>
     {% else %}

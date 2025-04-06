@@ -13,3 +13,9 @@ class ListaPlaylist(db.Model):
     utente = db.Column(db.String(80), nullable=False)
     nome = db.Column(db.String(80), nullable=False)
     elemento = db.Column(db.String(100), nullable=False)
+class SavedPlaylist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    playlist_id = db.Column(db.String, nullable=False)
+
+    user = db.relationship('User', backref='saved_playlists')

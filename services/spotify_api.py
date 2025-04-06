@@ -4,7 +4,7 @@ import pandas as pd
 
 SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
 SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-atfl11px1uj.ws-eu118.gitpod.io/callback"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-kv04bz0gsuo.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private user-top-read"
 
 sp_oauth = SpotifyOAuth(
@@ -76,17 +76,17 @@ def get_all_tracks(token_info, playlist_id=None):
     if sp:
         tracks_data = []
 
-        if playlist_id:  # Se viene passato un playlist_id, recupera solo le tracce di quella playlist
+        if playlist_id: 
             tracks = get_playlist_tracks(token_info, playlist_id)
         else:
-            # Se non c'è un playlist_id, recupera tutte le playlist dell'utente
+         
             playlists = get_user_playlists(token_info)
 
             for playlist in playlists:
                 playlist_id = playlist['id']
                 tracks = get_playlist_tracks(token_info, playlist_id)
 
-        # Aggiungi i dettagli delle tracce alla lista
+
         for track in tracks:
             track_info = track['track']
             release_date = track_info['album'].get('release_date', 'Unknown')
@@ -104,9 +104,9 @@ def get_all_tracks(token_info, playlist_id=None):
             })
 
         return pd.DataFrame(tracks_data)
-    return pd.DataFrame([])  # Se non è possibile ottenere le tracce, ritorna un DataFrame vuoto
+    return pd.DataFrame([])  
 
-# Aggiungi la funzione per forzare l'autenticazione se il token non ha lo scope corretto
+
 def force_reauthentication():
     auth_url = sp_oauth.get_authorize_url()
     print(f"Apri questo link nel tuo browser per autenticarti: {auth_url}")
