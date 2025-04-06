@@ -288,7 +288,7 @@ def save_playlist():
         playlist_info = sp.playlist(playlist_id)  # Ottieni i dettagli della playlist
         playlist_name = playlist_info['name']  # Nome della playlist
         
-        new_saved_playlist = SavedPlaylist(user_id=current_user.id, playlist_id=playlist_id, nome=playlist_name)
+        new_saved_playlist = SavedPlaylist(user_id=current_user.id, playlist_id=playlist_id)
         db.session.add(new_saved_playlist)
         db.session.commit()
         flash("Playlist salvata con successo!", "success")
