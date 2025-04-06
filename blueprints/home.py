@@ -4,7 +4,7 @@ import spotipy
 import pandas as pd
 import plotly.express as px
 from collections import Counter
-from services.spotify_api import get_user_info, get_user_playlists, get_all_tracks,get_playlist_tracks, get_track_details,SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+from services.spotify_api import get_user_info, get_user_playlists, get_all_tracks,get_playlist_tracks,get_public_tracks, get_track_details,SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
 from models import ListaPlaylist,SavedPlaylist,db
 home_bp = Blueprint('home', __name__)
 
@@ -24,13 +24,20 @@ def homepage():
     saved_playlists = SavedPlaylist.query.filter_by(user_id=current_user.id).all()  # Playlist salvate dall'utente
     return render_template('home.html', user_info=user_info, playlists=playlists, saved_playlists=saved_playlists, spotify_logged_in=spotify_logged_in)
 
-
+# Funzione per recuperare i brani pubblici tramite Spotify API
+def get_public_tracks():
+    # Recupera i brani più popolari pubblici (modifica la query se necessario)
+    tracks = sp.current_user_top_tracks(limit=10)
+    return tracks['items']
 @home_bp.route('/playlist_tracks/<playlist_id>')
 @login_required
 def playlist_tracks(playlist_id):
     token_info = session.get('token_info')
+    
+    # Se non c'è il token e siamo in locale
     if not token_info:
-        return redirect(url_for('home.show_public_tracks'))
+        tracks = EXAMPLE_TRACKS  # Mostra i brani di esempio
+        return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id, message="Accesso Spotify non disponibile, mostrando brani di esempio.")
     
     tracks = get_playlist_tracks(token_info, playlist_id)
     return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)

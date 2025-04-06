@@ -4,7 +4,7 @@ import pandas as pd
 
 SPOTIFY_CLIENT_ID = "200875a1e6d941bebe8d3ab86bd8dadf"
 SPOTIFY_CLIENT_SECRET = "c35e9f794b0e44baaf935f5e8638b320"
-SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-tu3x7ibhgwo.ws-eu118.gitpod.io/callback"
+SPOTIFY_REDIRECT_URI = "https://5000-livrieriluca-spotify-y5dnhxksacq.ws-eu118.gitpod.io/callback"
 SPOTIFY_SCOPE = "user-read-private user-read-email playlist-read-private user-top-read"
 
 sp_oauth = SpotifyOAuth(
@@ -31,6 +31,10 @@ def get_spotify_object(token_info=None):
     else:
         print("Token non presente.")
         return sp_public  # Restituisce l'oggetto pubblico se non è presente un token valido
+# Funzione per recuperare i brani pubblici tramite Spotify API
+def get_public_tracks():
+    # Recupera i brani più popolari pubblici (modifica la query se necessario)
+    tracks = sp.current_user_top_tracks(limit=10)
 
 def get_user_info(token_info):
     sp = get_spotify_object(token_info)
