@@ -4,7 +4,7 @@ import spotipy
 import pandas as pd
 import plotly.express as px
 from collections import Counter
-from services.spotify_api import get_user_info, get_user_playlists, get_all_tracks,get_playlist_tracks,get_public_tracks, get_track_details,SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET
+from services.spotify_api import get_user_info, get_user_playlists, get_all_tracks,get_playlist_tracks,get_public_tracks, get_track_details,SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET,get_spotify_object
 from models import ListaPlaylist,SavedPlaylist,db
 home_bp = Blueprint('home', __name__)
 
@@ -307,3 +307,48 @@ def save_playlist():
     
     # Ritorna alla ricerca con i messaggi e le playlist salvate
     return redirect(url_for('home.search', message="Playlist salvata con successo!", saved_playlists=saved_playlists))
+
+@home_bp.route('/recommendations', methods=['GET', 'POST'])
+@login_required
+def recommendations():
+    token_info = session.get('token_info')
+    if not token_info:
+        return redirect(url_for('auth.login'))
+    
+    sp = get_spotify_object(token_info)
+    user_playlists = sp.current_user_playlists()['items']
+    
+    recommendations = []
+
+    if request.method == 'POST':
+        artist_id = request.form.get('artist_id')
+        track_id = request.form.get('track_id')
+        genre = request.form.get('genre')
+        playlist_id = request.form.get('playlist_id')
+        create_new_playlist = request.form.get('create_new_playlist')
+        new_playlist_name = request.form.get('new_playlist_name')
+
+        # Parametri per ottenere le raccomandazioni
+        params = {
+            'seed_artists': artist_id if artist_id else '',
+            'seed_tracks': track_id if track_id else '',
+            'seed_genres': genre if genre else '',
+            'limit': 10
+        }
+
+        recommendations = sp.recommendations(**params)['tracks']
+        track_uris = [track['uri'] for track in recommendations]
+
+        # Creazione di una nuova playlist, se richiesto
+        if create_new_playlist and new_playlist_name:
+            user_id = sp.current_user()['id']
+            new_playlist = sp.user_playlist_create(user_id, new_playlist_name, public=False)
+            playlist_id = new_playlist['id']
+            flash(f"Nuova playlist '{new_playlist_name}' creata!", 'success')
+
+        # Aggiungi tracce alla playlist selezionata o nuova
+        if playlist_id:
+            add_tracks_to_playlist(token_info, playlist_id, track_uris)
+            flash('Brani aggiunti alla playlist!', 'success')
+
+    return render_template('recommendations.html', recommendations=recommendations, user_playlists=user_playlists)
