@@ -8,11 +8,6 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
 
-class ListaPlaylist(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    utente = db.Column(db.String(80), nullable=False)
-    nome = db.Column(db.String(80), nullable=False)
-    elemento = db.Column(db.String(100), nullable=False)
 class SavedPlaylist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))

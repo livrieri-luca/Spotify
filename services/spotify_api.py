@@ -21,95 +21,101 @@ sp_public = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
 ))
 
 def get_spotify_object(token_info=None):
-    # Verifica se il token è valido e ha lo scope 'user-top-read'
     if token_info:
         scopes = token_info.get('scope', '')
         if 'user-top-read' not in scopes:
-            print("Lo scope 'user-top-read' non è presente. Richiedi il permesso all'utente.")
-            return None  # Ritorna None se lo scope non è presente
-        return spotipy.Spotify(auth=token_info['access_token'])  # Restituisci Spotify object se lo scope è corretto
+            print("Lo scope 'user-top-read' non è presente.")
+            return None
+        return spotipy.Spotify(auth=token_info['access_token'])
     else:
-        print("Token non presente.")
-        return sp_public  # Restituisce l'oggetto pubblico se non è presente un token valido4
-# Funzione per recuperare i brani pubblici tramite Spotify API
-def get_public_tracks():
-    # Recupera i brani più popolari pubblici (modifica la query se necessario)
-    tracks = sp.current_user_top_tracks(limit=10)
+        print("Token non presente. Uso client pubblico.")
+        return sp_public
+
+def get_public_tracks(token_info=None):
+    sp = get_spotify_object(token_info)
+    if sp:
+        try:
+            return sp.current_user_top_tracks(limit=10)
+        except Exception as e:
+            print(f"Errore nel recupero dei top tracks: {e}")
+    return []
 
 def get_user_info(token_info):
     sp = get_spotify_object(token_info)
     if sp:
-        return sp.current_user()  # Ottieni le informazioni dell'utente
+        return sp.current_user()
     return None
-  
+
 def get_user_playlists(token_info):
     sp = get_spotify_object(token_info)
     if sp:
-        return sp.current_user_playlists()['items']  # Ottieni le playlist dell'utente
+        return sp.current_user_playlists()['items']
     return []
 
 def get_playlist_tracks(token_info, playlist_id):
     try:
         sp = get_spotify_object(token_info)
         if sp:
-            # Recupera le tracce della playlist
             results = sp.playlist_tracks(playlist_id)
-            tracks = results['items']  # Otteniamo la lista dei brani
-            while results['next']:  # Controlliamo se ci sono altre pagine di brani
+            tracks = results['items']
+            while results['next']:
                 results = sp.next(results)
                 tracks.extend(results['items'])
             return tracks
     except Exception as e:
         print(f"Errore nel recupero dei brani della playlist {playlist_id}: {e}")
-    return []  # Se c'è un errore, ritorna una lista vuota
+    return []
 
 def get_track_details(token_info, track_id):
     sp = get_spotify_object(token_info)
     if sp:
-        track = sp.track(track_id)
-        artist_details = sp.artist(track['artists'][0]['id'])
-
-        genres = artist_details.get('genres', [])
-        genre = genres[0] if genres else 'Genere sconosciuto'
-        
-        return track, genre
+        try:
+            track = sp.track(track_id)
+            artist_details = sp.artist(track['artists'][0]['id'])
+            genres = artist_details.get('genres', [])
+            genre = genres[0] if genres else 'Genere sconosciuto'
+            return track, genre
+        except Exception as e:
+            print(f"Errore nel recupero dettagli della traccia {track_id}: {e}")
     return None, 'Genere sconosciuto'
 
 def get_all_tracks(token_info, playlist_id=None):
     sp = get_spotify_object(token_info)
-    if sp:
-        tracks_data = []
+    if not sp:
+        return pd.DataFrame([])
 
-        if playlist_id: 
-            tracks = get_playlist_tracks(token_info, playlist_id)
-        else:
-         
-            playlists = get_user_playlists(token_info)
+    tracks_data = []
 
-            for playlist in playlists:
-                playlist_id = playlist['id']
-                tracks = get_playlist_tracks(token_info, playlist_id)
+    if playlist_id:
+        tracks = get_playlist_tracks(token_info, playlist_id)
+    else:
+        playlists = get_user_playlists(token_info)
+        tracks = []
+        for playlist in playlists:
+            pid = playlist['id']
+            tracks += get_playlist_tracks(token_info, pid)
 
+    for track_wrapper in tracks:
+        track_info = track_wrapper['track']
+        if not track_info:  # A volte ci sono tracce null
+            continue
+        release_date = track_info['album'].get('release_date', 'Unknown')
+        popularity = track_info.get('popularity', 0)
+        duration_ms = track_info.get('duration_ms', 0)
 
-        for track in tracks:
-            track_info = track['track']
-            release_date = track_info['album'].get('release_date', 'Unknown')
-            popularity = track_info['popularity']
-            duration_ms = track_info['duration_ms']
-            
-            tracks_data.append({
-                'track_name': track_info['name'],
-                'artist': track_info['artists'][0]['name'],
-                'album': track_info['album']['name'],
-                'genre': track_info['album'].get('genres', ['Sconosciuto'])[0],
-                'release_date': release_date,
-                'duration_ms': duration_ms,
-                'popularity': popularity
-            })
+        _, genre = get_track_details(token_info, track_info['id'])
 
-        return pd.DataFrame(tracks_data)
-    return pd.DataFrame([])  
+        tracks_data.append({
+            'track_name': track_info['name'],
+            'artist': track_info['artists'][0]['name'],
+            'album': track_info['album']['name'],
+            'genre': genre,
+            'release_date': release_date,
+            'duration_ms': duration_ms,
+            'popularity': popularity
+        })
 
+    return pd.DataFrame(tracks_data)
 
 def force_reauthentication():
     auth_url = sp_oauth.get_authorize_url()
@@ -117,4 +123,3 @@ def force_reauthentication():
     response = input("Incolla qui l'URL di ritorno dopo l'autenticazione: ")
     token_info = sp_oauth.get_access_token(response)
     return token_info
-

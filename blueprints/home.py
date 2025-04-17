@@ -1,312 +1,207 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request,flash
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash
+from sqlalchemy import text
 from flask_login import login_required, current_user
-import spotipy
-import pandas as pd
-import plotly.express as px
-from collections import Counter
-from services.spotify_api import get_user_info, get_user_playlists, get_all_tracks,get_playlist_tracks,get_public_tracks, get_track_details,SpotifyClientCredentials, SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET,get_spotify_object
-from models import ListaPlaylist,SavedPlaylist,db
-home_bp = Blueprint('home', __name__)
+from services.spotify_api import (
+    sp_public,
+    get_spotify_object,
+    get_user_info,
+    get_user_playlists,
+    sp_oauth
+)
+from models import db, User, SavedPlaylist
 
-sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(
-    client_id=SPOTIFY_CLIENT_ID,
-    client_secret=SPOTIFY_CLIENT_SECRET
-))
-
-
-@home_bp.route('/home')
-@login_required
-def homepage():
-    token_info = session.get('token_info')
-    spotify_logged_in = bool(token_info)
-    user_info = get_user_info(token_info) if spotify_logged_in else None
-    playlists = get_user_playlists(token_info) if spotify_logged_in else None
-    saved_playlists = SavedPlaylist.query.filter_by(user_id=current_user.id).all()  # Playlist salvate dall'utente
-    return render_template('home.html', user_info=user_info, playlists=playlists, saved_playlists=saved_playlists, spotify_logged_in=spotify_logged_in)
-
-# Funzione per recuperare i brani pubblici tramite Spotify API
-def get_public_tracks():
-    # Recupera i brani più popolari pubblici (modifica la query se necessario)
-    tracks = sp.current_user_top_tracks(limit=10)
-    return tracks['items']
-@home_bp.route('/playlist_tracks/<playlist_id>')
-@login_required
-def playlist_tracks(playlist_id):
-    token_info = session.get('token_info')
-    
-    # Se non c'è il token e siamo in locale
-    if not token_info:
-        tracks = EXAMPLE_TRACKS  # Mostra i brani di esempio
-        return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id, message="Accesso Spotify non disponibile, mostrando brani di esempio.")
-    
-    tracks = get_playlist_tracks(token_info, playlist_id)
-    return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)
+home_bp = Blueprint('home', __name__, template_folder='templates')
+# Funzione per selezionare due playlist da confrontare
 
 
-@home_bp.route('/public_tracks')
-def show_public_tracks():
-    public_tracks = sp.current_user_top_tracks(limit=10)
-
-    if 'items' not in public_tracks:
-        return "Errore: Nessuna traccia trovata", 500
-
-    return render_template('playlist_tracks.html', tracks=public_tracks['items'])
-
-
-@home_bp.route('/track_details/<track_id>')
-def track_details(track_id):
-    token_info = session.get('token_info')
-    track, genre = get_track_details(token_info, track_id)
-    playlist_id = request.args.get('playlist_id')
-    return render_template('track_details.html', track=track, genre=genre, playlist_id=playlist_id)
-
-
-def get_playlist_tracks(token_info, playlist_id):
-    results = sp.playlist_tracks(playlist_id)
-    return results['items']
-
-
-@home_bp.route('/analisi')
-@login_required
-def analytics():
-    token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('auth.login'))
-
-    tracks_df = get_all_tracks(token_info)
-
-    top_artists = tracks_df['artist'].value_counts().head(5)
-    fig_artists_html = px.bar(top_artists, x=top_artists.index, y=top_artists.values, 
-                              labels={'x': 'Artista', 'y': 'Numero di brani'}, 
-                              title="Top 5 Artisti più presenti").to_html(full_html=False)
-    
-    top_albums = tracks_df['album'].value_counts().head(5)
-    fig_albums_html = px.pie(top_albums, names=top_albums.index, values=top_albums.values, 
-                             title="Top 5 Album più presenti").to_html(full_html=False)
-
-    tracks_df['release_date'] = pd.to_datetime(tracks_df['release_date'], errors='coerce')
-    tracks_df['year'] = tracks_df['release_date'].dt.year
-
-    year_counts = tracks_df['year'].value_counts().sort_index()
-    fig_years_html = px.bar(year_counts, x=year_counts.index, y=year_counts.values,
-                            labels={'x': 'Anno', 'y': 'Numero di brani'},
-                            title='Distribuzione Temporale dei Brani').to_html(full_html=False)
-
-    fig_dur_html = px.histogram(tracks_df, x='duration_ms', nbins=30,
-                                title='Distribuzione della Durata dei Brani').to_html(full_html=False)
-
-    fig_pop_html = px.histogram(tracks_df, x='popularity', nbins=20,
-                                title='Distribuzione della Popolarità').to_html(full_html=False)
-
-    genre_counts = tracks_df['genre'].value_counts().head(10)
-    fig_genres_html = px.bar(genre_counts, x=genre_counts.index, y=genre_counts.values,
-                             labels={'x': 'Genere', 'y': 'Numero di brani'},
-                             title='Distribuzione dei Generi Musicali').to_html(full_html=False)
-
-    pop_time_df = tracks_df.groupby('year')['popularity'].mean().reset_index()
-    fig_pop_time_html = px.line(pop_time_df, x='year', y='popularity',
-                                title='Evoluzione della Popolarità nel Tempo').to_html(full_html=False)
-
-    return render_template('analytics.html',
-                           fig_artists=fig_artists_html,
-                           fig_albums=fig_albums_html,
-                           fig_years=fig_years_html,
-                           fig_dur=fig_dur_html,
-                           fig_pop=fig_pop_html,
-                           fig_genres=fig_genres_html,
-                           fig_pop_time=fig_pop_time_html)
-
-
-@home_bp.route('/seleziona_playlist_confronto', methods=['GET', 'POST'])
+@home_bp.route('/select_playlists_for_comparison', methods=['GET', 'POST'])
 @login_required
 def select_playlists_for_comparison():
-    token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('auth.login'))
+    # Recupera le playlist dell'utente
+    playlists = db.session.execute(
+        text('SELECT playlist_id FROM saved_playlist WHERE user_id = :user_id'),
+        {'user_id': current_user.id}
+    ).fetchall()
 
-    playlists = get_user_playlists(token_info)
+    # Se l'utente ha meno di due playlist, mostra un messaggio
+    if len(playlists) < 2:
+        flash('Devi avere almeno due playlist per fare un confronto.', 'danger')
+        return redirect(url_for('home.homepage'))
 
     if request.method == 'POST':
-        playlist_id_1 = request.form.get('playlist_id_1')
-        playlist_id_2 = request.form.get('playlist_id_2')
-        return redirect(url_for('home.confronto_playlist', playlist_id_1=playlist_id_1, playlist_id_2=playlist_id_2))
+        # Recupera gli ID delle playlist selezionate
+        playlist_1_id = request.form.get('playlist_1')
+        playlist_2_id = request.form.get('playlist_2')
 
+        # Verifica che entrambe le playlist siano selezionate
+        if playlist_1_id and playlist_2_id:
+            return redirect(url_for('analisi.playlist_analysis', playlist_1_id=playlist_1_id, playlist_2_id=playlist_2_id))
+
+        flash('Seleziona due playlist per il confronto!', 'warning')
+    
     return render_template('select_playlists_for_comparison.html', playlists=playlists)
 
 
-@home_bp.route('/confronto_playlist/<playlist_id_1>/<playlist_id_2>', methods=['GET'])
-@login_required
-def confronto_playlist(playlist_id_1, playlist_id_2):
+@home_bp.route('/homepage')
+def homepage():
     token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('auth.login'))
+    user_sp = None
+    user_info = None
+    playlists = []
 
-    # Ottieni le tracce per entrambe le playlist
-    playlist_1_tracks = get_playlist_tracks(token_info, playlist_id_1)
-    playlist_2_tracks = get_playlist_tracks(token_info, playlist_id_2)
+    if token_info and not current_user.is_authenticated:
+        # Solo Spotify
+        sp = get_spotify_object(token_info)
+        user_sp = get_user_info(token_info)
+        playlists = get_user_playlists(token_info)
+        user_info = {'display_name': user_sp['display_name']}
 
-    # Estrazione dei brani dalle playlist
-    tracks_1 = {track['track']['name'] for track in playlist_1_tracks}
-    tracks_2 = {track['track']['name'] for track in playlist_2_tracks}
-    common_tracks = tracks_1.intersection(tracks_2)
-    similarity_percentage = len(common_tracks) / min(len(tracks_1), len(tracks_2)) * 100
+    elif current_user.is_authenticated and not token_info:
+        # Solo Flask
+        user_info = {'display_name': current_user.username}
+        saved = SavedPlaylist.query.filter_by(user_id=current_user.id).all()
+        for s in saved:
+            try:
+                playlists.append(sp_public.playlist(s.playlist_id))
+            except Exception as e:
+                print(f"Errore nel recupero playlist {s.playlist_id}: {e}")
 
-    tracks_count = {
-        "Playlist 1": len(tracks_1),
-        "Playlist 2": len(tracks_2),
-        "Brani Comuni": len(common_tracks),
-        "Somiglianza (%)": similarity_percentage
-    }
+    elif token_info and current_user.is_authenticated:
+        # Entrambi
+        sp = get_spotify_object(token_info)
+        user_sp = get_user_info(token_info)
+        playlists = get_user_playlists(token_info)
+        user_info = {'display_name': user_sp['display_name']}
 
-    # Creazione del grafico per i brani
-    fig_tracks = px.bar(
-        x=list(tracks_count.keys()),
-        y=list(tracks_count.values()),
-        labels={'x': 'Categoria', 'y': 'Numero di Brani'},
-        title="Confronto Brani nelle Playlist"
-    ).to_html(full_html=False)
+        saved = SavedPlaylist.query.filter_by(user_id=current_user.id).all()
+        for s in saved:
+            try:
+                playlist_data = sp_public.playlist(s.playlist_id)
+                if not any(pl['id'] == playlist_data['id'] for pl in playlists):
+                    playlists.append(playlist_data)
+            except Exception as e:
+                print(f"Errore nel recupero playlist {s.playlist_id}: {e}")
 
-    # Estrazione degli artisti comuni nelle playlist
-    artists_1 = {track['track']['artists'][0]['name'] for track in playlist_1_tracks}
-    artists_2 = {track['track']['artists'][0]['name'] for track in playlist_2_tracks}
-    common_artists = artists_1.intersection(artists_2)
-
-    # Conteggio della frequenza degli artisti nelle playlist
-    artist_count_1 = {artist: sum(1 for track in playlist_1_tracks if artist in [a['name'] for a in track['track']['artists']]) for artist in common_artists}
-    artist_count_2 = {artist: sum(1 for track in playlist_2_tracks if artist in [a['name'] for a in track['track']['artists']]) for artist in common_artists}
-
-    artist_data = pd.DataFrame({
-        'Artist': list(common_artists),
-        'Playlist 1': [artist_count_1.get(artist, 0) for artist in common_artists],
-        'Playlist 2': [artist_count_2.get(artist, 0) for artist in common_artists]
-    })
-
-    artist_data_melted = artist_data.melt(id_vars="Artist", value_vars=["Playlist 1", "Playlist 2"],
-                                          var_name="Playlist", value_name="Frequenza")
-
-    # Creazione del grafico per gli artisti
-    fig_artists = px.bar(
-        artist_data_melted,
-        x="Artist",
-        y="Frequenza",
-        color="Playlist",
-        labels={'Artist': 'Artista', 'Frequenza': 'Frequenza'},
-        title="Artisti in Comune - Frequenza nelle Playlist"
-    ).to_html(full_html=False)
-
-    # Estrazione della popolarità per entrambe le playlist
-    popularity_1 = [track['track']['popularity'] for track in playlist_1_tracks]
-    popularity_2 = [track['track']['popularity'] for track in playlist_2_tracks]
-    avg_popularity_1 = sum(popularity_1) / len(popularity_1)
-    avg_popularity_2 = sum(popularity_2) / len(popularity_2)
-
-    # Creazione del grafico per la popolarità
-    fig_popularity = px.bar(
-        x=['Playlist 1', 'Playlist 2'],
-        y=[avg_popularity_1, avg_popularity_2],
-        labels={'x': 'Playlist', 'y': 'Popolarità Media'},
-        title="Confronto Popolarità Media delle Playlist"
-    ).to_html(full_html=False)
-
-    # Estrazione dei generi musicali
-    genres_1 = [track['track']['artists'][0].get('genres', ['Sconosciuto']) for track in playlist_1_tracks]
-    genres_2 = [track['track']['artists'][0].get('genres', ['Sconosciuto']) for track in playlist_2_tracks]
-
-    # Verifica dei generi estratti
-    print("Generi Playlist 1:", genres_1)
-    print("Generi Playlist 2:", genres_2)
-
-    # Creazione dei contatori per i generi
-    genre_count_1 = Counter([genre for sublist in genres_1 for genre in sublist])
-    genre_count_2 = Counter([genre for sublist in genres_2 for genre in sublist])
-
-    # Verifica dei contatori
-    print("Contatori dei generi Playlist 1:", genre_count_1)
-    print("Contatori dei generi Playlist 2:", genre_count_2)
-
-    # Creazione dei dati per il grafico dei generi
-    all_genres = set(genre_count_1.keys()).union(genre_count_2.keys())
-    genre_frequencies_1 = [genre_count_1.get(genre, 0) for genre in all_genres]
-    genre_frequencies_2 = [genre_count_2.get(genre, 0) for genre in all_genres]
-
-    # Creazione del dataframe per i generi
-    genre_data = pd.DataFrame({
-        'Genre': list(all_genres),
-        'Playlist 1': genre_frequencies_1,
-        'Playlist 2': genre_frequencies_2
-    })
-
-    # Verifica del dataframe
-    print("Dati dei generi:", genre_data)
-
-    # Melting dei dati per il grafico
-    genre_data_melted = genre_data.melt(id_vars="Genre", value_vars=["Playlist 1", "Playlist 2"],
-                                         var_name="Playlist", value_name="Frequency")
-
-    # Creazione del grafico per i generi
-    fig_genres = px.bar(
-        genre_data_melted,
-        x="Genre",
-        y="Frequency",
-        color="Playlist",
-        labels={'Genre': 'Genere', 'Frequency': 'Frequenza'},
-        title="Confronto Generi Musicali"
-    ).to_html(full_html=False)
-
-    # Renderizzazione dei risultati nella pagina
-    return render_template('comparison_results.html', 
-                           fig_tracks=fig_tracks, 
-                           fig_artists=fig_artists, 
-                           fig_popularity=fig_popularity, 
-                           fig_genres=fig_genres)
+    return render_template('home.html', user_sp=user_sp, user_info=user_info, playlists=playlists)
 
 
-@home_bp.route('/rimuovi/<id>')
-def rimuovi(id):
-    elemento = ListaPlaylist.query.get_or_404(id)
-    db.session.delete(elemento)
+@home_bp.route('/cerca')
+def cerca():
+     query = request.args.get('query', '')
+     results = []
+     if query:
+         try:
+             results = sp_public.search(q=query, type='playlist', limit=10)['playlists']['items']
+         except Exception as e:
+             flash('Errore nella ricerca delle playlist')
+             print(e)
+     return render_template('home.html', results=results, user_info=None, playlists=[])
+
+
+from flask import request, redirect, url_for, flash
+
+@home_bp.route('/saved_playlist', methods=['POST'])
+def saved_playlist():
+    playlist_id = request.form.get('playlist_id')
+
+    if not playlist_id:
+        flash('Playlist ID non valido.')
+        return redirect(url_for('home.cerca'))
+
+    # Logica per salvare la playlist nel database
+    # Assumendo che tu abbia un modello per le playlist salvate dell'utente
+    user_id = current_user.id  # Se l'utente è loggato, prendi il suo ID
+
+    # Controlla se la playlist è già stata salvata dall'utente
+    existing_playlist = Playlist.query.filter_by(user_id=user_id, spotify_id=playlist_id).first()
+
+    if existing_playlist:
+        flash('Questa playlist è già stata salvata.')
+    else:
+        # Aggiungi la playlist al database
+        new_playlist = Playlist(user_id=user_id, spotify_id=playlist_id)
+        db.session.add(new_playlist)
+        db.session.commit()
+        flash('Playlist salvata con successo.')
+
+    return redirect(url_for('home.cerca'))  # Torna alla pagina dei risultati di ricerca
+
+
+
+@home_bp.route('/remove_playlist', methods=['POST'])
+@login_required
+def remove_playlist():
+    SavedPlaylist.query.filter_by(user_id=current_user.id).delete()
     db.session.commit()
+    flash('Tutte le playlist rimosse!')
     return redirect(url_for('home.homepage'))
 
 
-@home_bp.route('/search', methods=['GET'])
+@home_bp.route('/remove_single_playlist', methods=['POST'])
 @login_required
-def search():
-    query = request.args.get('query')
-    
-    if query:
-        playlists = ListaPlaylist.query.filter(ListaPlaylist.nome.like(f'%{query}%')).all()
-        spotify_results = sp.search(q=query, type='playlist', limit=10)
-        spotify_playlists = spotify_results.get('playlists', {}).get('items', [])
-        return render_template('search.html', playlists=playlists, spotify_playlists=spotify_playlists)
-
-    return render_template('search.html', playlists=None, spotify_playlists=None)
-
-@home_bp.route('/salva_playlist', methods=['POST'])
-@login_required
-def save_playlist():
-    playlist_id = request.form['playlist_id']
-    
-    # Verifica se la playlist è già stata salvata
-    existing_playlist = SavedPlaylist.query.filter_by(user_id=current_user.id, playlist_id=playlist_id).first()
-
-    if not existing_playlist:
-        # Se la playlist non è già stata salvata, salvala nel database
-        playlist_info = sp.playlist(playlist_id)  # Ottieni i dettagli della playlist
-        playlist_name = playlist_info['name']  # Nome della playlist
-        
-        new_saved_playlist = SavedPlaylist(user_id=current_user.id, playlist_id=playlist_id)
-        db.session.add(new_saved_playlist)
+def remove_single_playlist():
+    playlist_id = request.form.get('playlist_id')
+    playlist = SavedPlaylist.query.filter_by(user_id=current_user.id, playlist_id=playlist_id).first()
+    if playlist:
+        db.session.delete(playlist)
         db.session.commit()
-        flash("Playlist salvata con successo!", "success")
+        flash('Playlist rimossa con successo!')
     else:
-        flash("Questa playlist è già stata salvata.", "info")
+        flash('Errore: Playlist non trovata.')
+    return redirect(url_for('home.homepage'))
 
-    # Recupera tutte le playlist salvate per l'utente
-    saved_playlists = SavedPlaylist.query.filter_by(user_id=current_user.id).all()
-    
-    # Ritorna alla ricerca con i messaggi e le playlist salvate
-    return redirect(url_for('home.search', message="Playlist salvata con successo!", saved_playlists=saved_playlists))
+
+@home_bp.route('/visualizza_brani/<playlist_id>')
+def visualizza_brani(playlist_id):
+    token_info = session.get('token_info')
+    sp = get_spotify_object(token_info) if token_info else sp_public
+
+    try:
+        playlist = sp.playlist(playlist_id)
+        tracks = playlist['tracks']['items']
+        return render_template('brani.html', tracks=tracks, playlist_name=playlist['name'])
+    except Exception as e:
+        print(f"Errore caricamento playlist {playlist_id}: {e}")
+        return redirect(url_for('home.homepage'))
+
+
+@home_bp.route('/albuminfo/<album_id>')
+def albuminfo(album_id):
+    sp = get_spotify_object(session.get('token_info')) if session.get('token_info') else sp_public
+    try:
+        album = sp.album(album_id)
+        album_data = {
+            "name": album['name'],
+            "release_date": album['release_date'],
+            "total_tracks": album['total_tracks'],
+            "image": album['images'][0]['url'] if album['images'] else None,
+            "artists": [{"name": a["name"], "id": a["id"]} for a in album["artists"]],
+            "tracks": [{"name": t["name"], "duration_ms": t["duration_ms"]} for t in album["tracks"]["items"]]
+        }
+        return render_template('albuminfo.html', album_data=album_data)
+    except Exception as e:
+        print(f"Errore caricamento album {album_id}: {e}")
+        return redirect(url_for('home.homepage'))
+
+
+@home_bp.route('/artistinfo/<artist_id>')
+def artistinfo(artist_id):
+    sp = get_spotify_object(session.get('token_info')) if session.get('token_info') else sp_public
+    try:
+        artist = sp.artist(artist_id)
+        top_tracks = sp.artist_top_tracks(artist_id, country='IT')['tracks']
+        albums = sp.artist_albums(artist_id, album_type='album', country='IT')['items']
+        artist_data = {
+            "name": artist['name'],
+            "genres": artist.get('genres', []),
+            "image": artist['images'][0]['url'] if artist['images'] else None,
+            "top_tracks": [{"name": t["name"], "preview_url": t["preview_url"]} for t in top_tracks],
+            "albums": [{"name": a["name"], "image": a["images"][0]['url']} for a in albums]
+        }
+        return render_template('artistinfo.html', artist_data=artist_data)
+    except Exception as e:
+        print(f"Errore info artista {artist_id}: {e}")
+        return redirect(url_for('home.homepage'))
 
 @home_bp.route('/recommendations', methods=['GET', 'POST'])
 @login_required
@@ -352,3 +247,21 @@ def recommendations():
             flash('Brani aggiunti alla playlist!', 'success')
 
     return render_template('recommendations.html', recommendations=recommendations, user_playlists=user_playlists)
+
+@home_bp.route('/playlist_tracks/<playlist_id>')
+def playlist_tracks(playlist_id):
+     token_info = session.get('token_info')
+     
+     if token_info:
+         sp = get_spotify_object(token_info)
+     else:
+         sp = sp_public  # Usa accesso pubblico se l'utente non ha fatto login a Spotify
+ 
+     try:
+         playlist = sp.playlist(playlist_id)
+         tracks = playlist['tracks']['items']
+         playlist_name = playlist['name']
+         return render_template('playlist_tracks.html', tracks=tracks, playlist_name=playlist_name)
+     except Exception as e:
+         print(f"Errore nel caricamento della playlist {playlist_id}: {e}")
+         return redirect(url_for('home.homepage'))  # Fallback in caso di errore
