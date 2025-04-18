@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
 from models import db, User
 from blueprints.auth import auth_bp
@@ -7,7 +8,7 @@ from blueprints.home import home_bp
 from blueprints.analisi import analisi_bp
 
 app = Flask(__name__)
-
+migrate = Migrate(app, db)
 # Configurazione dell'app
 app.secret_key = 'chiave_per_session'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -18,6 +19,8 @@ db.init_app(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'  # La vista da usare per il login
+
+
 
 # Caricamento dell'utente
 @login_manager.user_loader
