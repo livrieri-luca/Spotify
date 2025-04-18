@@ -153,7 +153,6 @@ def remove_single_playlist():
         flash('Errore: Playlist non trovata.')
     return redirect(url_for('home.homepage'))
 
-
 @home_bp.route('/visualizza_brani/<playlist_id>')
 def visualizza_brani(playlist_id):
     print(f"Carico la playlist con ID: {playlist_id}")
@@ -162,16 +161,19 @@ def visualizza_brani(playlist_id):
     sp = get_spotify_object(token_info) if token_info else sp_public
 
     try:
+        # Recupera la playlist da Spotify
         playlist = sp.playlist(playlist_id)
-        print("Nome playlist:", playlist['name'])  # ← debug
+        print("Nome playlist:", playlist['name'])  # Debug per il nome della playlist
         tracks = playlist['tracks']['items']
-        return render_template('playlist_tracks.html', tracks=tracks, playlist_name=playlist['name'])
+
+        # Ottieni il link della playlist su Spotify (per la condivisione)
+        share_url = playlist['external_urls']['spotify']  # Link esterno per la condivisione
+
+        # Passa il link della playlist al template
+        return render_template('playlist_tracks.html', tracks=tracks, playlist_name=playlist['name'], share_url=share_url)
     except Exception as e:
         print(f"Errore nel caricamento della playlist {playlist_id}: {e}")
         return redirect(url_for('home.homepage'))
-
-
-
 
 @home_bp.route('/recommendations', methods=['GET', 'POST'])
 def recommendations():
@@ -249,26 +251,15 @@ def playlist_tracks(playlist_id):
     return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)
 
 
-@home_bp.route('/track_details/<track_id>')
+@home_bp.route('/track/<track_id>')
 def track_details(track_id):
-    # Ottieni il token info dalla sessione
-    token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('auth.loginlocale'))
-
-    # Recupera i dettagli del brano
-    track, genre = get_track_details(token_info, track_id)
-    
-    # Se il brano non viene trovato, ritorna un errore
-    if not track:
-        flash("Brano non trovato!", "danger")
+    sp = get_spotify_object(session.get('token_info')) if 'token_info' in session else sp_public
+    try:
+        track = sp.track(track_id)
+        return render_template('track_details.html', track=track)
+    except Exception as e:
+        print(f"Errore caricamento track {track_id}: {e}")
         return redirect(url_for('home.homepage'))
-
-    # Ottieni l'ID della playlist dai parametri
-    playlist_id = request.args.get('playlist_id')
-
-    # Rendi il template con i dettagli del brano
-    return render_template('track_details.html', track=track, genre=genre, playlist_id=playlist_id)
 
 
 def get_playlist_tracks(token_info, playlist_id):

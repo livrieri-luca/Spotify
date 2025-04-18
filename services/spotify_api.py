@@ -65,19 +65,18 @@ def get_playlist_tracks(token_info, playlist_id):
     except Exception as e:
         print(f"Errore nel recupero dei brani della playlist {playlist_id}: {e}")
     return []
+def get_track_details(sp, track_id):
+    try:
+        track = sp.track(track_id)
+        artist_id = track['artists'][0]['id']
+        artist = sp.artist(artist_id)
+        genres = artist.get('genres', [])
+        genre = genres[0] if genres else 'Genere sconosciuto'
+        return track, genre
+    except Exception as e:
+        print(f"Errore nel recupero dettagli della traccia {track_id}: {e}")
+        return None, 'Genere sconosciuto'
 
-def get_track_details(token_info, track_id):
-    sp = get_spotify_object(token_info)
-    if sp:
-        try:
-            track = sp.track(track_id)
-            artist_details = sp.artist(track['artists'][0]['id'])
-            genres = artist_details.get('genres', [])
-            genre = genres[0] if genres else 'Genere sconosciuto'
-            return track, genre
-        except Exception as e:
-            print(f"Errore nel recupero dettagli della traccia {track_id}: {e}")
-    return None, 'Genere sconosciuto'
 
 def get_all_tracks(token_info, playlist_id=None):
     sp = get_spotify_object(token_info)

@@ -24,6 +24,15 @@
 
         <h1>Brani della Playlist</h1>
 
+        <!-- Pulsante per condividere la playlist -->
+        <div class="mb-3">
+            <!-- Pulsante per aprire la playlist su Spotify in una nuova finestra -->
+            <a href="{{ share_url }}" target="_blank" class="btn btn-primary mb-3">Apri la Playlist su Spotify</a>
+
+            <!-- Pulsante per copiare il link della playlist negli appunti -->
+            <button id="copyLinkBtn" class="btn btn-secondary mb-3">Copia il link della Playlist</button>
+        </div>
+
         <!-- Tabella per visualizzare i brani -->
         <table class="table table-striped">
             <thead>
@@ -43,7 +52,7 @@
                         <td>{{ track['track']['album']['name'] }}</td>
                         <td>{{ track['track']['duration_ms'] // 1000 }} sec</td>
                         <td>
-                            <a href="{{ url_for('home.track_details', track_id=track['track']['id'], playlist_id=playlist_id) }}" class="btn btn-info btn-sm">Vedi Dettagli</a>
+                            <a href="{{ url_for('home.track_details', track_id=track['track']['id']) }}"> Vedi Dettagli</a>
                         </td>
                     </tr>
                 {% endfor %}
@@ -54,6 +63,24 @@
         <p><a href="{{ url_for('home.homepage') }}" class="btn btn-primary">Torna alla Home</a></p>
 
     </div>
+
+    <!-- Script per la funzionalità di copiare il link -->
+    <script>
+        document.getElementById('copyLinkBtn').addEventListener('click', function() {
+            const shareUrl = "{{ share_url }}";  // Otteniamo il link della playlist
+
+            // Crea un campo di input temporaneo per copiare il link
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = shareUrl;  // Impostiamo il valore del link
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            // Notifica l'utente che il link è stato copiato
+            alert('Link della Playlist copiato negli appunti!');
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
