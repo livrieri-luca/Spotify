@@ -14,41 +14,6 @@ home_bp = Blueprint('home', __name__, template_folder='templates')
 # Funzione per selezionare due playlist da confrontare
 
 
-
-@home_bp.route('/select_playlists_for_comparison', methods=['GET', 'POST'])
-@login_required
-def select_playlists_for_comparison():
-    # Recupera le playlist dell'utente con il nome della playlist
-    playlists = db.session.execute(
-        text('''
-            SELECT p.id, p.name 
-            FROM playlist p
-            JOIN saved_playlist sp ON p.id = sp.playlist_id
-            WHERE sp.user_id = :user_id
-        '''),
-        {'user_id': current_user.id}
-    ).fetchall()
-
-    # Se l'utente ha meno di due playlist, mostra un messaggio
-    if len(playlists) < 2:
-        flash('Devi avere almeno due playlist per fare un confronto.', 'danger')
-        return redirect(url_for('home.homepage'))
-
-    if request.method == 'POST':
-        # Recupera gli ID delle playlist selezionate
-        playlist_1_id = request.form.get('playlist_1')
-        playlist_2_id = request.form.get('playlist_2')
-
-        # Verifica che entrambe le playlist siano selezionate
-        if playlist_1_id and playlist_2_id:
-            return redirect(url_for('analisi.playlist_analysis', playlist_1_id=playlist_1_id, playlist_2_id=playlist_2_id))
-
-        flash('Seleziona due playlist per il confronto!', 'warning')
-    
-    return render_template('select_playlists_for_comparison.html', playlists=playlists)
-
-
-
 @home_bp.route('/homepage')
 def homepage():
     token_info = session.get('token_info')
@@ -175,8 +140,93 @@ def visualizza_brani(playlist_id):
         print(f"Errore nel caricamento della playlist {playlist_id}: {e}")
         return redirect(url_for('home.homepage'))
 
+
+
+@home_bp.route('/playlist_tracks/<playlist_id>')
+def playlist_tracks(playlist_id):
+    # Ottieni le informazioni del token dalla sessione
+    token_info = session.get('token_info')
+    if not token_info:
+        return redirect(url_for('auth.loginlocale'))
+
+    sp = get_spotify_object(token_info)
+    try:
+        # Recupera i brani dalla playlist tramite l'API di Spotify
+        playlist_data = sp.playlist_tracks(playlist_id)
+        tracks = playlist_data['items']
+    except Exception as e:
+        print(f"Errore nel recupero dei brani: {e}")
+        tracks = []
+
+    # Passa i brani al template
+    return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)
+
+
+def get_playlist_tracks(token_info, playlist_id):
+    try:
+        # Fetch the tracks from the specified playlist
+        results = sp.playlist_tracks(playlist_id)
+        return results['items']
+    except Exception as e:
+        print(f"Error fetching playlist tracks: {e}")
+        return []
+
+@home_bp.route('/track/<track_id>')
+def track_details(track_id):
+    token_info = session.get('token_info')
+    
+    # Verifica se c'è un token, altrimenti usa il client pubblico
+    if token_info:
+        sp = get_spotify_object(token_info)
+    else:
+        sp = sp_public  # Client pubblico per i non autenticati
+    
+    try:
+        # Loggare l'ID della traccia per debug
+        print(f"Caricamento dettagli per il brano con ID: {track_id}")
+
+        # Recupera i dettagli della traccia e del genere
+        track, genre = get_track_details(sp, track_id)
+
+        # Se la traccia non è stata trovata, torna con un messaggio
+        if track is None:
+            print(f"Brano con ID {track_id} non trovato.")
+            return render_template('track_details.html', track=None, genre=None)
+
+        # Invia i dettagli al template
+        return render_template('track_details.html', track=track, genre=genre)
+    except Exception as e:
+        # Gestisci errori generali e logga il problema
+        print(f"Errore nel recupero dei dettagli per la traccia {track_id}: {e}")
+        return render_template('track_details.html', track=None, genre=None)
+
+def get_track_details(sp, track_id):
+    try:
+        # Ottieni i dettagli della traccia da Spotify
+        track = sp.track(track_id)
+        
+        # Se la traccia non è trovata, ritorna None
+        if not track:
+            print(f"Track con ID {track_id} non trovato.")
+            return None, 'Genere sconosciuto'
+        
+        # Ottieni l'ID dell'artista dalla traccia
+        artist_id = track['artists'][0]['id']
+        artist = sp.artist(artist_id)
+        
+        # Ottieni i generi dell'artista
+        genres = artist.get('genres', [])
+        genre = genres[0] if genres else 'Genere sconosciuto'
+
+        # Ritorna la traccia e il genere
+        return track, genre
+    except Exception as e:
+        print(f"Errore nel recupero dettagli per la traccia {track_id}: {e}")
+        return None, 'Genere sconosciuto'
+
+
 @home_bp.route('/recommendations', methods=['GET', 'POST'])
-def recommendations():
+def get_recommendations():
     # Controlla se l'utente è autenticato
     token_info = session.get('token_info')
     sp = None
@@ -229,60 +279,3 @@ def recommendations():
         user_playlists=user_playlists,
         token_info=token_info
     )
-
-
-@home_bp.route('/playlist_tracks/<playlist_id>')
-def playlist_tracks(playlist_id):
-    # Ottieni le informazioni del token dalla sessione
-    token_info = session.get('token_info')
-    if not token_info:
-        return redirect(url_for('auth.loginlocale'))
-
-    sp = get_spotify_object(token_info)
-    try:
-        # Recupera i brani dalla playlist tramite l'API di Spotify
-        playlist_data = sp.playlist_tracks(playlist_id)
-        tracks = playlist_data['items']
-    except Exception as e:
-        print(f"Errore nel recupero dei brani: {e}")
-        tracks = []
-
-    # Passa i brani al template
-    return render_template('playlist_tracks.html', tracks=tracks, playlist_id=playlist_id)
-
-
-@home_bp.route('/track/<track_id>')
-def track_details(track_id):
-    sp = get_spotify_object(session.get('token_info')) if 'token_info' in session else sp_public
-    try:
-        track = sp.track(track_id)
-        return render_template('track_details.html', track=track)
-    except Exception as e:
-        print(f"Errore caricamento track {track_id}: {e}")
-        return redirect(url_for('home.homepage'))
-
-
-def get_playlist_tracks(token_info, playlist_id):
-    try:
-        # Fetch the tracks from the specified playlist
-        results = sp.playlist_tracks(playlist_id)
-        return results['items']
-    except Exception as e:
-        print(f"Error fetching playlist tracks: {e}")
-        return []
-
-def get_track_details(token_info, track_id):
-    try:
-        # Fetch track details from the Spotify API
-        track = sp.track(track_id)
-        
-        if track is None or 'artists' not in track or len(track['artists']) == 0:
-            return None, []  # Return empty or default values if no valid track found
-        
-        # Assuming genre info is fetched from the track's album
-        genre = track['album']['artists'][0].get('genres', [])
-        
-        return track, genre
-    except Exception as e:
-        print(f"Error fetching track details: {e}")
-        return None, []

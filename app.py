@@ -5,8 +5,8 @@ from flask_bcrypt import Bcrypt
 from models import db, User
 from blueprints.auth import auth_bp
 from blueprints.home import home_bp
-from blueprints.analisi import analisi_bp
-
+from blueprints.analizza import analizza_bp
+from blueprints.compara import compara_bp
 app = Flask(__name__)
 migrate = Migrate(app, db)
 # Configurazione dell'app
@@ -30,8 +30,8 @@ def load_user(user_id):
 # Registrazione dei Blueprint
 app.register_blueprint(auth_bp)
 app.register_blueprint(home_bp)
-app.register_blueprint(analisi_bp)
-
+app.register_blueprint(analizza_bp)
+app.register_blueprint(compara_bp)
 # Creazione del database (se non esiste)
 with app.app_context():
     db.create_all()

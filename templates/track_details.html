@@ -33,7 +33,7 @@
             </h2>
             <p><strong>Durata:</strong> {{ track['duration_ms'] // 1000 }} secondi</p>
             <p><strong>Album:</strong> {{ track['album']['name'] }}</p>
-            <p><strong>Genere:</strong> {{ genre if genre else 'Genere sconosciuto' }}</p>
+            <p><strong>Genere:</strong> {% if genre %}{{ genre }}{% else %}Genere sconosciuto{% endif %}</p>
 
             {% if track['album']['images'] %}
                 <img src="{{ track['album']['images'][0]['url'] }}" alt="Copertina Album" class="mt-3" width="200">

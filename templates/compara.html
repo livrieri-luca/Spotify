@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Confronto Playlist</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-center mb-4 position-relative">
+            <h1 class="text-center">Confronto fra Playlist</h1>
+            <a href="/home" class="btn btn-primary position-absolute end-0">Torna alla Home</a>
+        </div>
+
+        <nav class="navbar navbar-expand-sm navbar-dark bg-custom mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="javascript:history.back()">Indietro</a>
+                <div class="collapse navbar-collapse justify-content-end" id="mynavbar">
+                </div>
+            </div>
+        </nav>
+
+        <h4 class="text-warning text-center">
+            {{ playlist_name1 }} <span class="text-white">vs</span> {{ playlist_name2 }}
+        </h4>
+        <h3 class="text-info">Somiglianza: {{ similarity_percentage }}%</h3>
+
+        <h4 class="mt-4">🎵 Brani in comune:</h4>
+        <ul>
+            {% for track in common_tracks %}
+                <li>{{ track }}</li>
+            {% endfor %}
+        </ul>
+
+        <h4 class="mt-5">Frequenza artisti in comune</h4>
+        <div class="row">
+            <div class="col-md-8">
+                <img src="data:image/png;base64,{{ img_artisti }}" class="img-fluid" alt="Frequenza artisti">
+            </div>
+            <div class="col-md-4">
+                <div class="bg-secondary p-3 rounded">
+                    <h5>Artisti comuni:</h5>
+                    <ul class="mb-0">
+                        {% for artista in artisti_comuni %}
+                            <li>{{ artista }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mt-5">Popolarità media</h4>
+        <img src="data:image/png;base64,{{ img_popolarita }}" class="img-fluid" alt="Popolarità">
+
+        <h4 class="mt-5">Generi musicali</h4>
+        <img src="data:image/png;base64,{{ img_generi }}" class="img-fluid" alt="Generi musicali">
+    </div>
+</body>
+</html>

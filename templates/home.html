@@ -15,15 +15,7 @@
         <a class="navbar-brand" href="{{ url_for('home.homepage') }}">🎵 Archivio Etichetta</a>
         <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('analisi.playlist_analysis') }}">Analisi delle Playlist</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('home.select_playlists_for_comparison') }}">
-                    <button class="btn btn-warning">Confronta Playlist</button>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('home.recommendations') }}">
+                <a class="nav-link" href="{{ url_for('home.get_recommendations') }}">
                     <button class="btn btn-primary">Vai alle Raccomandazioni</button>
                 </a>
             </li>
@@ -87,20 +79,18 @@
             </td>
             <td>
                 <a href="{{ url_for('home.visualizza_brani', playlist_id=playlist.id) }}" class="btn btn-info btn-sm">Visualizza brani</a>
-
+                <a href="{{ url_for('analizza.analizza_playlist_view', playlist_id=playlist['id']) }}" class="btn btn-warning btn-sm">Analizza Brani</a>
             </td>
             <td>
                 <form action="{{ url_for('home.saved_playlist') }}" method="POST">
                     <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
                     <button type="submit" class="btn btn-success btn-sm">Salva Playlist</button>
                 </form>
-                
             </td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
-
     {% else %}
         <p class="text-muted mt-3">Non ci sono risultati per la tua ricerca.</p>
     {% endif %}
@@ -110,53 +100,62 @@
 <div class="mt-5">
     <h2>🎶 Le tue Playlist:</h2>
     {% if playlists %}
-    <table class="table table-hover mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Nome Playlist</th>
-                <th>Immagine</th>
-                <th>Numero di brani</th>
-                <th>Azioni</th>
-                <th>Salva</th>
-                <th>Rimuovi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for playlist in playlists %}
-            <tr>
-                <td>{{ playlist['name'] }}</td>
-                <td>
-                    {% if playlist['images'] %}
-                        <img src="{{ playlist['images'][0]['url'] }}" alt="Immagine Playlist" width="50" height="50" class="rounded">
-                    {% else %}
-                        <span>No Image</span>
-                    {% endif %}
-                </td>
-                <td>{{ playlist['tracks']['total'] }}</td>
-                <td>
-                    <a href="{{ url_for('home.visualizza_brani', playlist_id=playlist.id) }}" class="btn btn-info btn-sm">Visualizza brani</a>
-                </td>
-                <td>
-                    {% if user_info %}
-                    <form action="{{ url_for('home.saved_playlist') }}" method="POST" class="d-inline">
-                        <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
-                        <button type="submit" class="btn btn-success btn-sm">Salva Playlist</button>
-                    </form>
-                    {% else %}
-                    <span>Devi essere loggato per salvare</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <form action="{{ url_for('home.remove_single_playlist') }}" method="POST" class="d-inline">
-                        <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
-                        <button type="submit" class="btn btn-danger btn-sm">Rimuovi Playlist</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        
-    </table>
+    <form id="compare-form" method="get">
+        <table class="table table-hover mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Seleziona</th>
+                    <th>Nome Playlist</th>
+                    <th>Immagine</th>
+                    <th>Numero di brani</th>
+                    <th>Azioni</th>
+                    <th>Salva</th>
+                    <th>Rimuovi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for playlist in playlists %}
+                <tr>
+                    <td><input type="checkbox" name="selected_playlists" value="{{ playlist['id'] }}"></td>
+                    <td>{{ playlist['name'] }}</td>
+                    <td>
+                        {% if playlist['images'] %}
+                            <img src="{{ playlist['images'][0]['url'] }}" alt="Immagine Playlist" width="50" height="50" class="rounded">
+                        {% else %}
+                            <span>No Image</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ playlist['tracks']['total'] }}</td>
+                    <td>
+                        <a href="{{ url_for('home.visualizza_brani', playlist_id=playlist.id) }}" class="btn btn-info btn-sm">Visualizza brani</a>
+                    </td>
+                    <td>
+                        {% if user_info %}
+                        <form action="{{ url_for('home.saved_playlist') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
+                            <button type="submit" class="btn btn-success btn-sm">Salva Playlist</button>
+                        </form>
+                        {% else %}
+                        <span>Devi essere loggato per salvare</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="{{ url_for('home.remove_single_playlist') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Rimuovi Playlist</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="text-center mt-3">
+            <button id="compare-button" type="submit" class="btn btn-warning">
+                Confronta le Playlist Selezionate
+            </button>
+        </div>
+    </form>
     {% else %}
     <p class="text-muted mt-3">Non hai playlist disponibili.</p>
     {% endif %}
@@ -171,5 +170,22 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Script per il confronto -->
+<script>
+document.getElementById('compare-button').addEventListener('click', function (event) {
+    const selected = document.querySelectorAll('input[name=selected_playlists]:checked');
+    if (selected.length !== 2) {
+        alert('Seleziona esattamente due playlist per confrontarle.');
+        event.preventDefault();
+        return;
+    }
+
+    const [p1, p2] = Array.from(selected).map(el => el.value);
+    const form = document.getElementById('compare-form');
+    form.action = `/compara?p1=${p1}&p2=${p2}`;
+});
+</script>
+
 </body>
 </html>
