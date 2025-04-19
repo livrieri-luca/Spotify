@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import pandas as pd
 from spotipy import Spotify
-from services.spotify_api import sp_public  # deve restituire un access token valido
-
+from services.spotify_api import sp_public 
 def plot_to_base64():
     """
     Funzione per generare l'immagine del grafico e restituirla come stringa Base64.
