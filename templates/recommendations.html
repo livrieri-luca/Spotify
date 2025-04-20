@@ -3,77 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raccomandazioni</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Spotify - Raccomandazioni</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            margin-top: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn-primary {
+            background-color: #1db954;
+            border-color: #1db954;
+        }
+
+        .btn-primary:hover {
+            background-color: #1ed760;
+            border-color: #1ed760;
+        }
+
+        .recommendation-item {
+            margin-bottom: 10px;
+        }
+
+        .recommendation-item a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .recommendation-item a:hover {
+            text-decoration: underline;
+        }
+
+        .alert-warning {
+            margin-top: 20px;
+        }
+
+        .alert {
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="text-center">Raccomandazioni Musicali</h2>
+    <div class="container">
+        <h1 class="text-center">Ricevi le tue Raccomandazioni Musicali</h1>
 
-        <!-- Form di ricerca per le raccomandazioni -->
-        <form method="POST" class="mt-4">
-            <div class="mb-3">
-                <label for="artist_id" class="form-label">ID Artista</label>
-                <input type="text" class="form-control" id="artist_id" name="artist_id">
-            </div>
-            <div class="mb-3">
-                <label for="track_id" class="form-label">ID Traccia</label>
-                <input type="text" class="form-control" id="track_id" name="track_id">
-            </div>
-            <div class="mb-3">
-                <label for="genre" class="form-label">Genere</label>
-                <input type="text" class="form-control" id="genre" name="genre">
-            </div>
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-warning" role="alert">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-            <!-- Selezione della Playlist esistente o creazione di una nuova -->
-            <div class="mb-3">
-                <label for="playlist_id" class="form-label">Seleziona Playlist</label>
-                <select class="form-select" id="playlist_id" name="playlist_id">
-                    {% for playlist in user_playlists %}
-                        <option value="{{ playlist['id'] }}">{{ playlist['name'] }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- Form per ottenere raccomandazioni -->
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('home.get_recommendations') }}">
+                    <div class="form-group">
+                        <label for="artist_id">Artista (ID):</label>
+                        <input type="text" class="form-control" name="artist_id" id="artist_id" placeholder="ID Artista (opzionale)">
+                    </div>
 
-            <!-- Opzione per creare una nuova playlist -->
-            <div class="mb-3">
-                <input type="checkbox" id="create_new_playlist" name="create_new_playlist">
-                <label for="create_new_playlist" class="form-check-label">Crea una nuova playlist</label>
-            </div>
-            <div class="mb-3" id="new_playlist_name_div" style="display: none;">
-                <label for="new_playlist_name" class="form-label">Nome della Nuova Playlist</label>
-                <input type="text" class="form-control" id="new_playlist_name" name="new_playlist_name">
-            </div>
+                    <div class="form-group">
+                        <label for="track_id">Brano (ID):</label>
+                        <input type="text" class="form-control" name="track_id" id="track_id" placeholder="ID Brano (opzionale)">
+                    </div>
 
-            <button type="submit" class="btn btn-primary">Ottieni Raccomandazioni</button>
-        </form>
+                    <div class="form-group">
+                        <label for="genre">Genere:</label>
+                        <input type="text" class="form-control" name="genre" id="genre" placeholder="Genere (opzionale)">
+                    </div>
 
-        <!-- Visualizza le raccomandazioni -->
-        {% if recommendations %}
-            <h3 class="mt-4">Brani Raccomandati</h3>
-            <ul class="list-group mt-3">
-                {% for track in recommendations %}
-                    <li class="list-group-item">
-                        <strong>{{ track['name'] }}</strong> - {{ track['artists'][0]['name'] }}
-                        <a href="{{ track['external_urls']['spotify'] }}" target="_blank" class="btn btn-info btn-sm float-end">Ascolta</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+                    {% if token_info %}
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" name="create_new_playlist" id="create_new_playlist">
+                            <label class="form-check-label" for="create_new_playlist">Crea una nuova playlist</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_playlist_name">Nome della Nuova Playlist:</label>
+                            <input type="text" class="form-control" name="new_playlist_name" id="new_playlist_name" placeholder="Nome Nuova Playlist" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="saved_playlists">Seleziona una Playlist Salvata:</label>
+                            <select class="form-control" name="saved_playlist_id" id="saved_playlists">
+                                <option value="">Seleziona una Playlist Salvata</option>
+                                {% for playlist in saved_playlists %}
+                                    <option value="{{ playlist.playlist_id }}">{{ playlist.playlist.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% else %}
+                        <p>Effettua il login su Spotify per poter aggiungere i brani alle playlist.</p>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">Ottieni Raccomandazioni</button>
+                </form>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Visualizzazione delle raccomandazioni -->
+        <div class="card">
+            <div class="card-body">
+                <h2 class="mt-4">Raccomandazioni</h2>
+                {% if recommendations %}
+                    <ul class="list-group">
+                        {% for track in recommendations %}
+                            <li class="list-group-item recommendation-item">
+                                <a href="https://open.spotify.com/track/{{ track['id'] }}" target="_blank">{{ track['name'] }} - {{ track['artists'][0]['name'] }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Nessuna raccomandazione disponibile. Prova a inserire i parametri nel modulo sopra.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
+    <!-- Script per abilitare/Disabilitare il campo "Nuova Playlist" -->
     <script>
-        // Gestione della visibilità del campo per il nome della nuova playlist
         document.getElementById('create_new_playlist').addEventListener('change', function() {
-            const newPlaylistDiv = document.getElementById('new_playlist_name_div');
-            if (this.checked) {
-                newPlaylistDiv.style.display = 'block';
-            } else {
-                newPlaylistDiv.style.display = 'none';
-            }
+            document.getElementById('new_playlist_name').disabled = !this.checked;
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS e dipendenze -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
 </html>

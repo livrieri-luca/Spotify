@@ -225,30 +225,29 @@ def get_track_details(sp, track_id):
         return None, 'Genere sconosciuto'
 
 
+# Funzione per ottenere le raccomandazioni e aggiungere i brani
 @home_bp.route('/recommendations', methods=['GET', 'POST'])
 def get_recommendations():
-    # Controlla se l'utente è autenticato
-    token_info = session.get('token_info')
+    token_info = session.get('token_info')  # Ottieni il token dalla sessione
     sp = None
-    user_playlists = []
-
-    if token_info:
-        sp = get_spotify_object(token_info)  # Ottieni l'oggetto Spotify
-        user_playlists = sp.current_user_playlists()['items']  # Ottieni le playlist dell'utente
-    else:
-        flash('Non sei autenticato. Alcune funzionalità potrebbero non essere disponibili.', 'warning')
-
     recommendations = []
 
-    if request.method == 'POST' and token_info:  # Fai le raccomandazioni solo se l'utente è loggato
+    # Verifica se l'utente è autenticato
+    if token_info:
+        sp = get_spotify_object(token_info)
+    else:
+        flash('Devi effettuare il login su Spotify per ottenere le raccomandazioni.', 'warning')
+    
+    if request.method == 'POST' and token_info:
+        # Ottieni i parametri dal form
         artist_id = request.form.get('artist_id')
         track_id = request.form.get('track_id')
         genre = request.form.get('genre')
-        playlist_id = request.form.get('playlist_id')
+        playlist_id = request.form.get('saved_playlist_id')  # ID della playlist salvata
         create_new_playlist = request.form.get('create_new_playlist')
         new_playlist_name = request.form.get('new_playlist_name')
 
-        # Parametri per ottenere le raccomandazioni
+        # Parametri per la richiesta delle raccomandazioni
         params = {
             'seed_artists': artist_id if artist_id else '',
             'seed_tracks': track_id if track_id else '',
@@ -256,26 +255,41 @@ def get_recommendations():
             'limit': 10
         }
 
-        # Ottieni le raccomandazioni da Spotify
-        recommendations = sp.recommendations(**params)['tracks']
-        track_uris = [track['uri'] for track in recommendations]
+        print(f"Params per raccomandazioni: {params}")  # Debug: Controlla i parametri
 
-        # Creazione di una nuova playlist, se richiesto
-        if create_new_playlist and new_playlist_name:
-            user_id = sp.current_user()['id']
-            new_playlist = sp.user_playlist_create(user_id, new_playlist_name, public=False)
-            playlist_id = new_playlist['id']
-            flash(f"Nuova playlist '{new_playlist_name}' creata!", 'success')
+        try:
+            # Ottenere le raccomandazioni da Spotify
+            recommendations = sp.recommendations(**params)['tracks'] if sp else []
+            print(f"Raccomandazioni ricevute: {recommendations}")  # Debug: Controlla le raccomandazioni
 
-        # Aggiungi tracce alla playlist selezionata o nuova
-        if playlist_id:
-            add_tracks_to_playlist(token_info, playlist_id, track_uris)
-            flash('Brani aggiunti alla playlist!', 'success')
+            track_uris = [track['uri'] for track in recommendations]  # Estrai gli URI dei brani
 
-    # Renderizza la pagina con le raccomandazioni e le playlist (se l'utente è autenticato)
+            # Se l'utente è autenticato e ha selezionato una playlist per aggiungere i brani
+            if playlist_id:
+                add_tracks_to_playlist(token_info, playlist_id, track_uris)
+                flash('Brani aggiunti alla playlist!', 'success')
+
+            # Se l'utente ha scelto di creare una nuova playlist
+            if create_new_playlist and new_playlist_name:
+                user_id = sp.current_user()['id']
+                new_playlist = sp.user_playlist_create(user_id, new_playlist_name, public=False)
+                playlist_id = new_playlist['id']
+                flash(f"Nuova playlist '{new_playlist_name}' creata!", 'success')
+
+        except Exception as e:
+            print(f"Errore durante la richiesta delle raccomandazioni: {e}")  # Debug: Gestione errori
+
     return render_template(
         'recommendations.html',
         recommendations=recommendations,
-        user_playlists=user_playlists,
         token_info=token_info
     )
+
+# Funzione per aggiungere i brani alla playlist
+def add_tracks_to_playlist(token_info, playlist_id, track_uris):
+    try:
+        sp = get_spotify_object(token_info)
+        sp.playlist_add_items(playlist_id, track_uris)  # Aggiungi i brani alla playlist
+    except Exception as e:
+        print(f"Errore nell'aggiungere brani alla playlist: {e}")
+        flash('Errore nell\'aggiungere i brani alla playlist.', 'danger')
