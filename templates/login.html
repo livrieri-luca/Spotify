@@ -49,23 +49,25 @@
         <button type="submit" class="btn btn-primary">Accedi</button>
     </form>
 
-    <!-- SweetAlert2 Script -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <script>
-                {% for category, message in messages %}
-                    Swal.fire({
-                        icon: '{{ "success" if category == "success" else "error" }}',
-                        title: '{{ message }}',
-                        timer: 3000,
-                        showConfirmButton: false
-                    });
-                {% endfor %}
-            </script>
-        {% endif %}
-    {% endwith %}
+   <!-- Inclusione di SweetAlert per la visualizzazione di notifiche pop-up -->
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+   <!-- Sezione per visualizzare eventuali messaggi di successo o errore -->
+   {% with messages = get_flashed_messages(with_categories=true) %}
+       {% if messages %}
+           <script>
+               {% for category, message in messages %}
+                   // Visualizza una notifica pop-up per ciascun messaggio
+                   Swal.fire({
+                       icon: '{{ "success" if category == "success" else "error" }}', // Determina il tipo di icona (successo o errore)
+                       title: '{{ message }}', // Il contenuto del messaggio
+                       timer: 3000, // La durata della notifica (3 secondi)
+                       showConfirmButton: false // Non mostra il pulsante di conferma
+                   });
+               {% endfor %}
+           </script>
+       {% endif %}
+   {% endwith %}
     <div class="mt-3 text-center">
         <a href="{{ url_for('auth.register') }}">Non hai un account? Registrati qui.</a><br>
     </div>

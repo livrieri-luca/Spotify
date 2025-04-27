@@ -1,6 +1,6 @@
 import re
 from flask import Blueprint, render_template, redirect, request, url_for, flash, session
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
 from models import db, User
 import spotipy
@@ -37,9 +37,11 @@ def login():
 
 # Rotta per il logout dell'utente
 @auth_bp.route('/logout')
+@login_required
 def logout():
     # Pulisci la sessione dell'utente e lo redirigi alla pagina di login
     session.clear()
+    flash('Logout effettuato con successo.', 'success')
     return redirect(url_for('auth.loginlocale'))
 
 # Rotta per la registrazione di un nuovo utente
@@ -73,34 +75,38 @@ def register():
 # Rotta per il callback dopo che l'utente ha autorizzato l'accesso a Spotify
 @auth_bp.route('/callback')
 def callback():
-    # Recuperiamo il codice di autorizzazione da Spotify
-    code = request.args.get('code')
-    
-    # Otteniamo il token di accesso tramite il codice ricevuto
-    token_info = sp_oauth.get_access_token(code)
-    session['token_info'] = token_info
+    try:
+        # Recuperiamo il codice di autorizzazione da Spotify
+        code = request.args.get('code')
+        
+        # Otteniamo il token di accesso tramite il codice ricevuto
+        token_info = sp_oauth.get_access_token(code)
+        session['token_info'] = token_info
 
-    # Creiamo un oggetto Spotify utilizzando il token di accesso
-    sp = spotipy.Spotify(auth=token_info['access_token'])
-    user_info = sp.current_user()
+        # Creiamo un oggetto Spotify utilizzando il token di accesso
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        user_info = sp.current_user()
 
-    # Cerchiamo un utente nel nostro database con l'ID di Spotify
-    user = User.query.filter_by(username=user_info['id']).first()
-    
-    # Se l'utente non esiste, lo creiamo
-    if not user:
-        user = User(username=user_info['id'], password=None)
-        db.session.add(user)
-        db.session.commit()
+        # Cerchiamo un utente nel nostro database con l'ID di Spotify
+        user = User.query.filter_by(username=user_info['id']).first()
+        
+        # Se l'utente non esiste, lo creiamo
+        if not user:
+            user = User(username=user_info['id'], password=None)
+            db.session.add(user)
+            db.session.commit()
 
-    # Eseguiamo il login dell'utente
-    login_user(user)
-    return redirect(url_for('home.homepage'))
+        # Eseguiamo il login dell'utente
+        login_user(user)
+        flash('Login avvenuto con successo tramite Spotify!', 'success')
+        return redirect(url_for('home.homepage'))
+    except Exception as e:
+        flash(f"Errore nel processo di login tramite Spotify: {str(e)}", 'danger')
+        return redirect(url_for('auth.loginlocale'))
 
 # Rotta per il login dell'utente tramite Spotify o credenziali locali
 @auth_bp.route('/', methods=['GET', 'POST'])
 def loginlocale():
-    # Controlliamo se l'utente è già autenticato tramite Spotify
     token_info = session.get('token_info', None)
     
     if token_info:
@@ -139,3 +145,4 @@ def loginlocale():
     
     # Mostriamo la pagina di login
     return render_template('login.html')
+

@@ -135,6 +135,16 @@
     </style>
 </head>
 <body>
+    <!-- Mostra i messaggi di errore, se presenti -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="flash {{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 
 <div class="container mt-4">
     <!-- Spinner di caricamento -->
