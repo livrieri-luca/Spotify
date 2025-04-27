@@ -125,11 +125,26 @@
         .text-center a {
             text-decoration: none;
         }
+
+        /* Stili per lo spinner */
+        #loading-spinner {
+            display: none;
+            text-align: center;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container mt-4">
+    <!-- Spinner di caricamento -->
+    <div id="loading-spinner">
+        <div class="spinner-border text-warning" role="status">
+            <span class="visually-hidden">Caricamento...</span>
+        </div>
+        <p class="text-warning mt-2">Sto analizzando i brani, per favore aspetta...</p>
+    </div>
+
     <!-- Sezione per i grafici -->
     {% if plots %}
         <div id="grafici">
@@ -194,6 +209,24 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // Funzione per mostrare il caricamento
+        function showLoading() {
+            document.getElementById('loading-spinner').style.display = 'block';
+        }
+
+        // Funzione per nascondere il caricamento
+        function hideLoading() {
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
+
+        // Mostra caricamento prima dell'analisi
+        showLoading();
+
+        // Simula un caricamento (per esempio, una chiamata di analisi)
+        setTimeout(function() {
+            hideLoading();  // Nascondi il caricamento
+        }, 3000); // Aspetta 3 secondi (simulando il tempo di analisi)
+
         const grafici = document.getElementById("grafici");
         if (grafici) {
             grafici.style.opacity = 1;  // Mostra i grafici con un'animazione

@@ -6,3 +6,9 @@ plotly
 flask_login
 flask_bcrypt
 flask_sqlalchemy
+spotipy
+flask
+pandas
+matplotlib
+flask-migrate
+flask-login

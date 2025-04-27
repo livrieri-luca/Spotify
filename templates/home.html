@@ -138,7 +138,7 @@
                             <input type="hidden" name="playlist_id" value="{{ playlist['id'] }}">
                             <button type="submit" class="btn btn-danger btn-sm me-1">Rimuovi Playlist</button>
                         </form>
-                        <a href="{{ url_for('analizza.analizza_playlist_view', playlist_id=playlist['id']) }}" class="btn btn-warning btn-sm">Analizza Brani</a>
+                        <a href="{{ url_for('analizza.analizza_playlist_view', playlist_id=playlist['id']) }}" class="btn btn-warning btn-sm btn-analizza">Analizza Brani</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -171,7 +171,8 @@
         <div class="spinner-border text-warning" role="status">
           <span class="visually-hidden">Caricamento...</span>
         </div>
-        <h5 class="mt-3">Caricamento in corso...</h5>
+        <h5 class="mt-3">Analisi in corso...<br>Stiamo preparando i tuoi risultati!</h5>
+        <p class="small mt-2">Questo potrebbe richiedere alcuni secondi.</p>
       </div>
     </div>
   </div>
@@ -192,30 +193,43 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Script per il confronto e il caricamento -->
 <script>
+    // Script confronto (già esistente)
     document.getElementById('compare-button').addEventListener('click', function (event) {
         event.preventDefault();
-
+    
         const selected = document.querySelectorAll('input[name=selected_playlists]:checked');
         if (selected.length !== 2) {
-            // Mostra la modale di errore
             const modal = new bootstrap.Modal(document.getElementById('errorModal'));
             modal.show();
             return;
         }
-
-        // Mostra la modale di caricamento
+    
         const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
         modal.show();
-
-        // Attendi 1 secondo e poi reindirizza
+    
         setTimeout(() => {
             const [p1, p2] = Array.from(selected).map(el => el.value);
             window.location.href = `/compara?p1=${p1}&p2=${p2}`;
         }, 1000);
     });
-</script>
+    
+    // NUOVO SCRIPT - Per tutti i pulsanti "Analizza Brani"
+    document.querySelectorAll('.btn-analizza').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault(); // Impedisce il comportamento normale
+    
+            const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            modal.show(); // Mostra caricamento
+    
+            const targetUrl = this.getAttribute('href'); // Prende l'URL
+    
+            setTimeout(() => {
+                window.location.href = targetUrl; // Dopo 1 sec vai alla pagina di analisi
+            }, 1000);
+        });
+    });
+    </script>
 
 </body>
 </html>

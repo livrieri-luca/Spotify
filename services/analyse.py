@@ -4,14 +4,14 @@ import io
 import base64
 
 def plot_to_base64(fig):
-    """Converte un grafico Matplotlib in una stringa Base64 per l'HTML."""
+    """Converte il grafico generato con Matplotlib in una stringa Base64, utile per visualizzarlo in HTML."""
     img = io.BytesIO()
     fig.savefig(img, format='png', bbox_inches='tight')
     img.seek(0)
     return base64.b64encode(img.getvalue()).decode()
 
 def analizza_playlist(tracks):
-    """Analizza i brani della playlist e genera statistiche e grafici."""
+    """Analizza i brani di una playlist e genera statistiche e grafici per diverse caratteristiche."""
     if not tracks:
         return {}
 
@@ -34,7 +34,7 @@ def analizza_playlist(tracks):
 
     plots = {}
 
-    # Top 5 Artisti più presenti
+    # Identifica i 5 artisti più presenti nella playlist
     artist_list = []
     for track in tracks:
         track_info = track.get('track', None)
@@ -47,6 +47,7 @@ def analizza_playlist(tracks):
     artist_series = pd.Series(artist_list)
     artist_count = artist_series.value_counts().head(5)
 
+    # Crea un grafico a barre per i 5 artisti più presenti
     fig, ax = plt.subplots(figsize=(6, 4))
     bars = ax.barh(artist_count.index, artist_count.values, color='purple')
     ax.set_title('Top 5 Artisti più Presenti')
@@ -55,7 +56,7 @@ def analizza_playlist(tracks):
     ax.bar_label(bars, labels=[str(v) for v in artist_count.values], padding=3)
     plots['top_artists'] = plot_to_base64(fig)
 
-    # Top 5 Album più presenti
+    # Identifica i 5 album più presenti nella playlist
     album_count = df['album'].value_counts().head(5)
     fig, ax = plt.subplots(figsize=(6, 4))
     bars = ax.barh(album_count.index, album_count.values, color='orange')
@@ -65,7 +66,7 @@ def analizza_playlist(tracks):
     ax.bar_label(bars, labels=[str(v) for v in album_count.values], padding=3)
     plots['top_albums'] = plot_to_base64(fig)
 
-    # Distribuzione Generi Musicali
+    # Analizza la distribuzione dei generi musicali presenti nella playlist
     if not df['genres'].isna().all():
         genre_list = df['genres'].str.split(', ').explode().dropna()
         genre_count = genre_list.value_counts().head(7)
@@ -77,32 +78,29 @@ def analizza_playlist(tracks):
         ax.bar_label(bars, labels=[str(v) for v in genre_count.values], padding=3)
         plots['top_genres'] = plot_to_base64(fig)
 
-    # Distribuzione della Durata dei Brani
+    # Analizza la durata dei brani e crea un grafico a barre per la loro distribuzione
     duration_data = []
     for track in tracks:
         track_info = track.get('track', {})
         duration_ms = track_info.get('duration_ms')
         if duration_ms:
-            duration_min = duration_ms / 60000
+            duration_min = duration_ms / 60000  # Converti da millisecondi a minuti
             duration_data.append(duration_min)
 
     if duration_data:
         fig, ax = plt.subplots(figsize=(6, 4))
         
-        # Istogramma e raccolta delle altezze delle barre
+        # Crea un istogramma per la distribuzione delle durate
         counts, bins, patches = ax.hist(duration_data, bins=15, color='goldenrod', edgecolor='black')
         ax.set_title('Variazione della Durata dei Brani nella Playlist')
         ax.set_xlabel('Durata (minuti)')
         ax.set_ylabel('Frequenza')
-        # Imposta i tick dell’asse Y solo sui valori interi presenti come altezza delle barre
         yticks = sorted(set(int(count) for count in counts if count > 0))
         ax.set_yticks(yticks)
-        
-        # Mostra griglia solo sui tick presenti (quindi solo dove ci sono barre)
         ax.grid(True, axis='y', which='major')
         plots['duration_distribution'] = plot_to_base64(fig)
 
-    # Distribuzione Brani per Artista (a torta)
+    # Visualizza la distribuzione dei brani per artista in un grafico a torta
     total_tracks = df['artist'].value_counts().sum()
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.pie(artist_count, labels=artist_count.index, autopct=lambda p: f'{p:.1f}%' if p > 0 else '',
@@ -110,7 +108,7 @@ def analizza_playlist(tracks):
     ax.set_title('Distribuzione Brani per Artista')
     plots['artist_distribution'] = plot_to_base64(fig)
 
-    # Evoluzione della Popolarità nel Tempo
+    # Analizza come la popolarità dei brani è cambiata nel tempo
     popularity_data = []
     for track in tracks:
         track_info = track.get('track', None)
@@ -141,7 +139,7 @@ def analizza_playlist(tracks):
         ax.grid(True)
         plots['popularity_over_time'] = plot_to_base64(fig)
 
-    # Distribuzione Temporale dei Brani (numero di brani per anno)
+    # Analizza la distribuzione dei brani per anno di pubblicazione
     year_data = []
     for track in tracks:
         track_info = track.get('track', None)
