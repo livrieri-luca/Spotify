@@ -4,122 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ottieni Suggerimenti Musicali</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f4f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .container {
-            max-width: 600px;
-            padding-top: 50px;
-            padding-bottom: 50px;
-        }
-
-        .card {
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: white;
-        }
-
-        .form-control {
-            border-radius: 25px;
-            border: 1px solid #ddd;
-            margin-bottom: 15px;
-        }
-
-        .btn-primary {
-            border-radius: 25px;
-            width: 100%;
-            font-size: 18px;
-            padding: 10px;
-        }
-
-        .btn-primary:hover {
-            background-color: #0069d9;
-        }
-
-        .form-group label {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .form-text {
-            color: #6c757d;
-        }
-
-        .lead {
-            color: #007bff;
-            font-size: 1.2em;
-        }
-
-        .card-title {
-            color: #007bff;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-        }
-
-        .form-group small {
-            font-size: 0.875rem;
-        }
-
-        .text-muted {
-            font-size: 0.9rem;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #777;
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-
-<div class="container">
-    <div class="card">
-        <div class="card-body">
-            <h2 class="card-title text-center">Ottieni Suggerimenti Musicali</h2>
-            <p class="lead text-center">Inserisci i tuoi artisti, brani o generi preferiti per ricevere suggerimenti su Spotify.</p>
-
-            <form method="POST" action="{{ url_for('home.get_recommendations') }}">
-                <div class="form-group">
-                    <label for="seed_artists">Artisti (separati da virgola):</label>
-                    <input type="text" class="form-control" id="seed_artists" name="seed_artists" placeholder="Es: Coldplay, Daft Punk">
-                </div>
-                <div class="form-group">
-                    <label for="seed_tracks">Brani (separati da virgola):</label>
-                    <input type="text" class="form-control" id="seed_tracks" name="seed_tracks" placeholder="Es: Yellow, Get Lucky">
-                </div>
-                <div class="form-group">
-                    <label for="seed_genres">Generi (separati da virgola):</label>
-                    <input type="text" class="form-control" id="seed_genres" name="seed_genres" placeholder="Es: pop, rock, electronic">
-                    {% if available_genres %}
-                        <small class="form-text text-muted">
-                            Generi disponibili: {{ available_genres|join(', ') }}
-                        </small>
-                    {% endif %}
-                </div>
-                <button type="submit" class="btn btn-primary">Ottieni Suggerimenti <i class="fas fa-search"></i></button>
-            </form>
-        </div>
+    <div class="container my-5">
+        <h1 class="text-center">Ottieni Suggerimenti Musicali</h1>
+        <form method="POST" action="{{ url_for('home.get_recommendations') }}">
+            <div class="form-group">
+                <label for="seed_artists">Artisti (separati da virgola):</label>
+                <input type="text" name="seed_artists" id="seed_artists" class="form-control" placeholder="Es. The Beatles, Taylor Swift">
+            </div>
+            <div class="form-group">
+                <label for="seed_tracks">Brani (separati da virgola):</label>
+                <input type="text" name="seed_tracks" id="seed_tracks" class="form-control" placeholder="Es. Hey Jude, Shake It Off">
+            </div>
+            <div class="form-group">
+                <label for="seed_genres">Generi (separati da virgola):</label>
+                <input type="text" name="seed_genres" id="seed_genres" class="form-control" placeholder="Es. rock, pop">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Ottieni Suggerimenti</button>
+        </form>
     </div>
-
-    <div class="footer">
-        <p>&copy; 2025 Suggerimenti Musicali</p>
-    </div>
-</div>
-</div>   
-<!-- Link per tornare alla home -->
-   <div class="text-center mb-4">
-       <a href="{{ url_for('home.homepage') }}" class="btn btn-dark">Torna alla Home</a>
-   </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
