@@ -214,55 +214,112 @@ def get_track_details(sp, track_id):
         print(f"Errore nel recupero dettagli per la traccia {track_id}: {e}")
         return None, 'Genere sconosciuto'
 
-# Definiamo la rotta per ottenere raccomandazioni basate su artista, traccia o genere
 @home_bp.route('/recommendations', methods=['GET', 'POST'])
 def get_recommendations():
-    artist_id = request.args.get('artist_id')
-    track_id = request.args.get('track_id')
-    genre = request.args.get('genre')
+    """Ottiene suggerimenti musicali basati su input dell'utente"""
+    sp = get_spotify_client()
+    
+    if request.method == 'POST':
+        # Recupera i parametri dal form
+        seed_artists = request.form.get('seed_artists', '').split(',')
+        seed_tracks = request.form.get('seed_tracks', '').split(',')
+        seed_genres = request.form.get('seed_genres', '').split(',')
+        
+        # Filtra i valori vuoti
+        seed_artists = [a.strip() for a in seed_artists if a.strip()]
+        seed_tracks = [t.strip() for t in seed_tracks if t.strip()]
+        seed_genres = [g.strip() for g in seed_genres if g.strip()]
+        
+        try:
+            # Ottieni le raccomandazioni
+            recommendations = sp.recommendations(
+                seed_artists=seed_artists[:5],  # Spotify accetta max 5 seed
+                seed_tracks=seed_tracks[:5],
+                seed_genres=seed_genres[:5],
+                limit=20
+            )
+            
+            # Se l'utente è autenticato, recupera le sue playlist
+            user_playlists = []
+            if 'token_info' in session:
+                user_playlists = sp.current_user_playlists(limit=50)['items']
+            
+            return render_template('recommendations.html', 
+                                tracks=recommendations['tracks'],
+                                user_playlists=user_playlists,
+                                seeds={'artists': seed_artists, 
+                                      'tracks': seed_tracks, 
+                                      'genres': seed_genres})
+            
+        except Exception as e:
+            flash(f"Errore nel recuperare i suggerimenti: {str(e)}", "danger")
+            return redirect(url_for('home.get_recommendations'))
+    
+    # Se è una richiesta GET, mostra il form di ricerca
+    return render_template('recommendations_form.html')
 
-    sp = get_spotify_object()
-
-    # Parametri per le raccomandazioni
-    params = {
-        'seed_artists': artist_id if artist_id else '',
-        'seed_tracks': track_id if track_id else '',
-        'seed_genres': genre if genre else '',
-        'limit': 10
-    }
-
-    try:
-        recommendations = sp.recommendations(**params)['tracks']
-        print(f"Raccomandazioni trovate: {len(recommendations)}")
-    except Exception as e:
-        print(f"Errore: {e}")
-        flash('Errore nel recupero delle raccomandazioni.', 'danger')
-        recommendations = []
-
-    return render_template('recommendations.html', recommendations=recommendations)
-
-# Definiamo la rotta per salvare le raccomandazioni come playlist
 @home_bp.route('/save_recommendations', methods=['POST'])
-@login_required
 def save_recommendations():
-    sp = get_spotify_object()
-
-    track_ids = request.form.getlist('track_ids')  # Array di track_id passati dal frontend
-
-    user_id = sp.current_user()['id']  # Ottieni l'ID dell'utente
-    playlist_name = "Nuova Playlist da Raccomandazioni"
-    playlist_description = "Playlist creata automaticamente con i brani consigliati"
+    """Salva i brani consigliati in una playlist"""
+    if 'token_info' not in session:
+        flash("Devi effettuare l'accesso con Spotify per salvare i suggerimenti", "warning")
+        return redirect(url_for('home.search_playlist'))
+    
+    sp = spotipy.Spotify(auth=session['token_info']['access_token'])
+    track_uris = request.form.getlist('track_uris')
+    
+    if not track_uris:
+        flash("Nessun brano selezionato", "warning")
+        return redirect(url_for('home.search'))
     
     try:
-        playlist = sp.user_playlist_create(user_id, playlist_name, description=playlist_description)
-        playlist_id = playlist['id']
-
-        # Aggiungi i brani alla playlist
-        sp.user_playlist_add_tracks(user_id, playlist_id, track_ids)
-
-        flash("Playlist creata e brani salvati con successo!", 'success')
+        # Crea una nuova playlist
+        user_id = sp.current_user()['id']
+        playlist_name = "Raccomandazioni da ricerca - " + datetime.now().strftime("%d/%m/%Y")
+        new_playlist = sp.user_playlist_create(
+            user=user_id,
+            name=playlist_name,
+            public=True,
+            description="Brani raccomandati basati sulla tua ricerca"
+        )
+        
+        # Aggiungi i brani
+        sp.playlist_add_items(new_playlist['id'], track_uris)
+        
+        flash(f"{len(track_uris)} brani salvati in una nuova playlist!", "success")
+        return redirect(url_for('home.view_playlist', playlist_id=new_playlist['id']))
+    
     except Exception as e:
-        print(f"Errore durante il salvataggio delle raccomandazioni: {e}")
-        flash("Si è verificato un errore durante il salvataggio della playlist.", 'danger')
+        flash(f"Errore nel salvataggio: {str(e)}", "danger")
+        return redirect(url_for('home.search'))
+def get_spotify_client():
+    """Restituisce un client Spotify autenticato oppure un client pubblico se l'utente non è loggato."""
+    token_info = session.get('token_info')
+    if token_info:
+        return spotipy.Spotify(auth=token_info['access_token'])
+    return sp_public
+@home_bp.route('/view_playlist/<playlist_id>')
+def view_playlist(playlist_id):
+    """Visualizza i dettagli di una playlist (brani, descrizione, etc.)"""
+    token_info = session.get('token_info')
 
-    return redirect(url_for('home.get_recommendations'))
+    # Se l'utente è loggato, utilizza il suo client Spotify autenticato
+    sp = get_spotify_client()
+
+    try:
+        # Recupera i dettagli della playlist
+        playlist = sp.playlist(playlist_id)
+        tracks = playlist['tracks']['items']  # Brani della playlist
+        playlist_name = playlist['name']
+        share_url = playlist['external_urls']['spotify']  # Link per la condivisione
+
+        # Passa i dettagli della playlist e i brani alla template
+        return render_template('playlist_details.html', 
+                               playlist_name=playlist_name, 
+                               tracks=tracks, 
+                               share_url=share_url)
+
+    except Exception as e:
+        print(f"Errore nel recupero della playlist {playlist_id}: {e}")
+        flash("Errore nel recupero della playlist.", "danger")
+        return redirect(url_for('home.homepage'))

@@ -98,28 +98,22 @@
             padding: 30px;
         }
 
+        /* Modal for share options */
+        .modal-body a {
+            display: block;
+            padding: 10px;
+            margin: 5px;
+            background-color: #f8f9fa;
+            color: #000;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .modal-body a:hover {
+            background-color: #e2e6ea;
+        }
     </style>
-    <script>
-        function copyToClipboard() {
-            var copyText = document.getElementById("shareLink");
-            copyText.select();
-            document.execCommand("copy");
-
-            // Show success message
-            var message = document.getElementById("successMessage");
-            message.style.display = 'block';
-
-            // Hide the message after 2 seconds
-            setTimeout(function() {
-                message.style.display = 'none';
-            }, 2000);
-        }
-
-        function openLink() {
-            var link = document.getElementById("shareLink").value;
-            window.open(link, "_blank");
-        }
-    </script>
 </head>
 <body>
 
@@ -162,11 +156,62 @@
         </div>
     </div>
 
+    <!-- Condividi su social -->
+    <button class="btn btn-warning mt-4" data-bs-toggle="modal" data-bs-target="#shareModal">Condividi su social</button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shareModalLabel">Condividi Playlist</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <a href="https://api.whatsapp.com/send?text={{ share_url }}" target="_blank" class="btn btn-success">
+                        Condividi su WhatsApp
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}" target="_blank" class="btn btn-primary">
+                        Condividi su Facebook
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ share_url }}" target="_blank" class="btn btn-info">
+                        Condividi su Twitter
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ share_url }}" target="_blank" class="btn btn-secondary">
+                        Condividi su LinkedIn
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Link per tornare alla home -->
     <a href="{{ url_for('home.homepage') }}" class="btn btn-primary btn-home">Torna alla Home</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function copyToClipboard() {
+        var copyText = document.getElementById("shareLink");
+        copyText.select();
+        document.execCommand("copy");
+
+        // Show success message
+        var message = document.getElementById("successMessage");
+        message.style.display = 'block';
+
+        // Hide the message after 2 seconds
+        setTimeout(function() {
+            message.style.display = 'none';
+        }, 2000);
+    }
+
+    function openLink() {
+        var link = document.getElementById("shareLink").value;
+        window.open(link, "_blank");
+    }
+</script>
 
 </body>
 </html>
